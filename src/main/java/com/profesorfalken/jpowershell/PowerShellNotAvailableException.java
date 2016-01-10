@@ -13,29 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.profesorfalken.jpowershell;
+package com.profesorfalken.jpowershell;
+
+import java.io.IOException;
 
 /**
- * Response of PowerShell command. This object encapsulate all the useful 
- * returned information
+ * Custom checked exception produced when the Powershell executable cannot 
+ * be found
  * 
  * @author Javier Garcia Alonso
  */
-public class PowerShellResponse {
+public class PowerShellNotAvailableException extends IOException{
 
-    private final boolean error;
-    private final String commandOutput;
-
-    PowerShellResponse(boolean isError, String commandOutput) {
-        this.error = isError;
-        this.commandOutput = commandOutput;
+    PowerShellNotAvailableException() {
     }
 
-    public boolean isError() {
-        return error;
+    PowerShellNotAvailableException(String message) {
+        super(message);
     }
-    
-    public String getCommandOutput() {
-        return commandOutput;
+
+    PowerShellNotAvailableException(String message, Throwable cause) {
+        super(message, cause);
     }
+
+    PowerShellNotAvailableException(Throwable cause) {
+        super(cause);
+    }
+
 }

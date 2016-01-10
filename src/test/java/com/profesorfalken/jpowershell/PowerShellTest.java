@@ -1,4 +1,4 @@
-package org.profesorfalken.jpowershell;
+package com.profesorfalken.jpowershell;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -34,11 +34,12 @@ public class PowerShellTest {
     }
 
     /**
-     * Test of openSession method, of class PowerShell.
+     * Test of PowerShell command.
      */
     @Test
     public void testListDir() throws Exception {
         System.out.println("testListDir");
+        if (OSDetector.isWindows()) {
         PowerShell powerShell = PowerShell.openSession();
         PowerShellResponse response = powerShell.executeCommand("dir");                
         
@@ -47,14 +48,16 @@ public class PowerShellTest {
         Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
         
         powerShell.close();
+        }
     }
 
     /**
-     * Test of openSession method, of class PowerShell.
+     * Test of PowerShell command.
      */
     @Test
     public void testListProcesses() throws Exception {
         System.out.println("testListProcesses");
+        if (OSDetector.isWindows()) {
         PowerShell powerShell = PowerShell.openSession();
         PowerShellResponse response = powerShell.executeCommand("Get-Process");         
 
@@ -63,14 +66,16 @@ public class PowerShellTest {
         Assert.assertTrue(response.getCommandOutput().contains("powershell"));
         
         powerShell.close();
+        }
     }
 
     /**
-     * Test of openSession method, of class PowerShell.
+     * Test of PowerShell command.
      */
    @Test
     public void testCheckBIOSByWMI() throws Exception {
         System.out.println("testCheckBIOSByWMI");
+        if (OSDetector.isWindows()) {
         PowerShell powerShell = PowerShell.openSession();
         PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
         System.out.println("Check BIOS:" + response.getCommandOutput());   
@@ -78,6 +83,7 @@ public class PowerShellTest {
         Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
         
         powerShell.close();
+        }
     }
     
     /**
@@ -86,6 +92,7 @@ public class PowerShellTest {
     @Test
     public void testErrorCase() throws Exception {
         System.out.println("testErrorCase");
+        if (OSDetector.isWindows()) {
         PowerShell powerShell = PowerShell.openSession();
         PowerShellResponse response = powerShell.executeCommand("sfdsfdsf");
         System.out.println("Error:" + response.getCommandOutput());          
@@ -93,14 +100,16 @@ public class PowerShellTest {
         Assert.assertTrue(response.getCommandOutput().contains("sfdsfdsf"));
         
         powerShell.close();
+        }
     }
     
     /**
-     * Test of openSession method, of class PowerShell.
+     * Test of multiple PowerShell commands.
      */
     @Test
     public void testMultipleCalls() throws Exception {
         System.out.println("testMultiple");
+        if (OSDetector.isWindows()) {
         PowerShell powerShell = PowerShell.openSession();
         PowerShellResponse response = powerShell.executeCommand("dir");        
         System.out.println("First call:" + response.getCommandOutput());
@@ -113,5 +122,6 @@ public class PowerShellTest {
         Assert.assertTrue("Cannot find SMBIOSBIOSVersion", response.getCommandOutput().contains("SMBIOSBIOSVersion"));
         
         powerShell.close();       
+        }
     }
 }

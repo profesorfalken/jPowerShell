@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.profesorfalken.jpowershell;
+package com.profesorfalken.jpowershell;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -55,7 +55,7 @@ public class PowerShell {
             p = pb.start();
         } catch (IOException ex) {
             throw new PowerShellNotAvailableException(
-                    "Cannot execute PowerShell.exe. Please make sure that it is istalled in your system", ex);
+                    "Cannot execute PowerShell.exe. Either your are not using a Windows system or PowerShell is not installed", ex);
         }
         
         commandWriter
