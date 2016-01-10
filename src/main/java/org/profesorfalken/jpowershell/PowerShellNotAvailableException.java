@@ -25,18 +25,18 @@ import java.io.IOException;
  */
 public class PowerShellNotAvailableException extends IOException{
 
-    public PowerShellNotAvailableException() {
+    PowerShellNotAvailableException() {
     }
 
-    public PowerShellNotAvailableException(String message) {
+    PowerShellNotAvailableException(String message) {
         super(message);
     }
 
-    public PowerShellNotAvailableException(String message, Throwable cause) {
+    PowerShellNotAvailableException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public PowerShellNotAvailableException(Throwable cause) {
+    PowerShellNotAvailableException(Throwable cause) {
         super(cause);
     }
 

@@ -23,10 +23,16 @@ package org.profesorfalken.jpowershell;
  */
 public class PowerShellResponse {
 
+    private final boolean error;
     private final String commandOutput;
 
-    public PowerShellResponse(String commandOutput) {
+    PowerShellResponse(boolean isError, String commandOutput) {
+        this.error = isError;
         this.commandOutput = commandOutput;
+    }
+
+    public boolean isError() {
+        return error;
     }
     
     public String getCommandOutput() {

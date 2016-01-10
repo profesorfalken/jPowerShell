@@ -40,11 +40,12 @@ public class PowerShell {
     private PrintWriter commandWriter;
     private boolean closed = false;
 
-    private final ExecutorService threadpool;
+    private ExecutorService threadpool;
+    
+    private static final int MAX_THREADS = 3;
 
-    //Private constructor. Initializes the thread executor
-    private PowerShell()  {
-        this.threadpool = Executors.newSingleThreadExecutor();
+    //Private constructor.
+    private PowerShell(){        
     }
 
     //Initializes PowerShell console in which we will enter the commands
@@ -86,27 +87,36 @@ public class PowerShell {
      */
     public PowerShellResponse executeCommand(String command) {
         Callable commandProcessor = new PowerShellCommandProcessor(commandWriter, p.getInputStream());
+        Callable commandProcessorError = new PowerShellCommandProcessor(commandWriter, p.getErrorStream());
         
-        String commandOutput = "";        
+        String commandOutput = "";
+        boolean isError = false;
         
+        this.threadpool = Executors.newFixedThreadPool(MAX_THREADS);
         Future<String> result = threadpool.submit(commandProcessor);
+        Future<String> resultError = threadpool.submit(commandProcessorError);
         
         //Launch command
         commandWriter.println(command);        
 
         try {
-            while (!result.isDone()) {
+            while (!result.isDone() && !resultError.isDone()) {
                 //System.out.println("PowerShell command not finished yet....");
                 Thread.sleep(50);
             }
-            commandOutput = result.get();
+            if (result.isDone()) {
+                commandOutput = result.get();
+            } else {
+                isError = true;
+                commandOutput = resultError.get();
+            }
         } catch (InterruptedException ex){
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         } catch (ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         }
         
-        return new PowerShellResponse(commandOutput);
+        return new PowerShellResponse(isError, commandOutput);
     }
 
     /**

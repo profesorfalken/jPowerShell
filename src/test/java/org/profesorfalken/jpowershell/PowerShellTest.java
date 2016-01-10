@@ -68,7 +68,7 @@ public class PowerShellTest {
     /**
      * Test of openSession method, of class PowerShell.
      */
-    @Test
+   @Test
     public void testCheckBIOSByWMI() throws Exception {
         System.out.println("testCheckBIOSByWMI");
         PowerShell powerShell = PowerShell.openSession();
@@ -80,19 +80,37 @@ public class PowerShellTest {
         powerShell.close();
     }
     
+    /**
+     * Test error case.
+     */
+    @Test
+    public void testErrorCase() throws Exception {
+        System.out.println("testErrorCase");
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("sfdsfdsf");
+        System.out.println("Error:" + response.getCommandOutput());          
+        
+        Assert.assertTrue(response.getCommandOutput().contains("sfdsfdsf"));
+        
+        powerShell.close();
+    }
+    
+    /**
+     * Test of openSession method, of class PowerShell.
+     */
     @Test
     public void testMultipleCalls() throws Exception {
         System.out.println("testMultiple");
         PowerShell powerShell = PowerShell.openSession();
         PowerShellResponse response = powerShell.executeCommand("dir");        
         System.out.println("First call:" + response.getCommandOutput());
-        Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
+        Assert.assertTrue("Cannot find LastWriteTime", response.getCommandOutput().contains("LastWriteTime"));
         response = powerShell.executeCommand("Get-Process"); 
         System.out.println("Second call:" + response.getCommandOutput());
-        Assert.assertTrue(response.getCommandOutput().contains("powershell"));
+        Assert.assertTrue("Cannot find powershell", response.getCommandOutput().contains("powershell"));        
         response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
         System.out.println("Third call:" + response.getCommandOutput());
-        Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
+        Assert.assertTrue("Cannot find SMBIOSBIOSVersion", response.getCommandOutput().contains("SMBIOSBIOSVersion"));
         
         powerShell.close();       
     }
