@@ -79,22 +79,22 @@ public class PowerShell {
 
     /**
      * Launch a PowerShell command.<p> 
-     * This method launch a thread which will be executed in the alreade 
+     * This method launch a thread which will be executed in the already
      * created PowerShell console context
      * 
      * @param command the command to call. Ex: dir
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable commandProcessor = new PowerShellCommandProcessor(commandWriter, p.getInputStream());
-        Callable commandProcessorError = new PowerShellCommandProcessor(commandWriter, p.getErrorStream());
+        Callable commandProcessor = new PowerShellCommandProcessor(commandWriter, p.getInputStream(), true);
+        //Callable commandProcessorError = new PowerShellCommandProcessor(commandWriter, p.getErrorStream(), false);
         
         String commandOutput = "";
         boolean isError = false;
         
         this.threadpool = Executors.newFixedThreadPool(MAX_THREADS);
         Future<String> result = threadpool.submit(commandProcessor);
-        Future<String> resultError = threadpool.submit(commandProcessorError);
+        Future<String> resultError = result;//threadpool.submit(commandProcessorError);
         
         //Launch command
         commandWriter.println(command);        
@@ -132,7 +132,9 @@ public class PowerShell {
             }
         } finally {            
             commandWriter.close();
-            this.threadpool.shutdown();
+            if (this.threadpool != null) {
+                this.threadpool.shutdown();
+            }
             this.closed = true;
         }
     }

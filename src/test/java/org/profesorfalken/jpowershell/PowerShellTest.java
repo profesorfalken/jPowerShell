@@ -64,11 +64,13 @@ public class PowerShellTest {
         
         powerShell.close();
     }
+    
+    
 
     /**
      * Test of openSession method, of class PowerShell.
      */
-   @Test
+    @Test
     public void testCheckBIOSByWMI() throws Exception {
         System.out.println("testCheckBIOSByWMI");
         PowerShell powerShell = PowerShell.openSession();
@@ -76,6 +78,36 @@ public class PowerShellTest {
         System.out.println("Check BIOS:" + response.getCommandOutput());   
         
         Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
+        
+        powerShell.close();
+    }
+    
+    /**
+     * Test of empty response
+     */
+    @Test
+    public void testCheckEmptyResponse() throws Exception {
+        System.out.println("testCheckEmptyResponse");
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_1394Controller");
+        System.out.println("Empty response:" + response.getCommandOutput());   
+        
+        Assert.assertTrue("".equals(response.getCommandOutput()));
+        
+        powerShell.close();
+    }
+    
+    /**
+     * Test of long command
+     */
+    @Test
+    public void testLongCommand() throws Exception {
+        System.out.println("testLongCommand");
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("Get-WMIObject -List | Where{$_.name -match \"^Win32_\"} | Sort Name");
+        System.out.println("Long list:" + response.getCommandOutput());   
+        
+        Assert.assertTrue(response.getCommandOutput().length() > 1000);
         
         powerShell.close();
     }
