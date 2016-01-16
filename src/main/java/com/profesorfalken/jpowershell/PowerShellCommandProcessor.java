@@ -33,9 +33,7 @@ import java.util.logging.Logger;
  */
 class PowerShellCommandProcessor implements Callable {
 
-    private static final String CRLF = "\r\n";
-    private static final int WAIT_PAUSE = 3;
-    private static final int MAX_WAIT = 2000;
+    private static final String CRLF = "\r\n";    
 
     private final BufferedReader reader;
     private final boolean checkTimeout;
@@ -81,21 +79,23 @@ class PowerShellCommandProcessor implements Callable {
         return powerShellOutput.toString();
     }
     
+    //Checks when we can start reading the output. Timeout if it takes to long to avoid hangs
     private boolean startReading() throws IOException, InterruptedException {
         int timeWaiting = 0;
         
         while (!this.reader.ready()) {            
-            Thread.sleep(WAIT_PAUSE);
-            timeWaiting += WAIT_PAUSE;
-            if (checkTimeout && timeWaiting > MAX_WAIT) {
+            Thread.sleep(PowerShell.WAIT_PAUSE);
+            timeWaiting += PowerShell.WAIT_PAUSE;
+            if (checkTimeout && timeWaiting > PowerShell.MAX_WAIT) {
                 return false;
             }            
         }
         return true;
     }
     
+    //Checks when we the reader can continue to read.
     private boolean continueReading() throws IOException, InterruptedException {
-        Thread.sleep(WAIT_PAUSE);
+        Thread.sleep(PowerShell.WAIT_PAUSE);
         return this.reader.ready();
     }
 }

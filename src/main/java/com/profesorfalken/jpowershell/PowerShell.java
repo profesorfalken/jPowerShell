@@ -40,13 +40,17 @@ import java.util.logging.Logger;
  */
 public class PowerShell {
 
+    //Process to store PowerShell session
     private Process p;
+    //Writer to send commands
     private PrintWriter commandWriter;
+    
+    //Threaded session variables
     private boolean closed = false;
-
     private ExecutorService threadpool;
-
     private static final int MAX_THREADS = 3; //standard output + error output + session close thread
+    static final int WAIT_PAUSE = 3;
+    static final int MAX_WAIT = 2000;
 
     //Private constructor.
     private PowerShell() {
@@ -59,7 +63,7 @@ public class PowerShell {
             p = pb.start();
         } catch (IOException ex) {
             throw new PowerShellNotAvailableException(
-                    "Cannot execute PowerShell.exe. Please make sure that it is istalled in your system", ex);
+                    "Cannot execute PowerShell.exe. Please make sure that it is installed in your system", ex);
         }
 
         commandWriter
@@ -106,8 +110,7 @@ public class PowerShell {
 
         try {
             while (!result.isDone() && !resultError.isDone()) {
-                //System.out.println("PowerShell command not finished yet....");
-                Thread.sleep(50);
+                Thread.sleep(WAIT_PAUSE);
             }
             if (result.isDone()) {
                 commandOutput = result.get();
@@ -138,15 +141,14 @@ public class PowerShell {
                         return "OK";
                     }
                 });
-                int timeout = 3000;
                 int closingTime = 0;
                 while (!closeTask.isDone() && !closeTask.isDone()) {
-                    if (closingTime > timeout) {
+                    if (closingTime > MAX_WAIT) {
                         Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when closing PowerShell: TIMEOUT!");
                         break;
                     }
-                    Thread.sleep(10);
-                    closingTime += 10;
+                    Thread.sleep(WAIT_PAUSE);
+                    closingTime += WAIT_PAUSE;
                 }
             } catch (InterruptedException ex) {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when pwhen closing PowerShell", ex);
@@ -173,7 +175,7 @@ public class PowerShell {
     @Override
     protected void finalize() throws Throwable {
         if (!this.closed) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.WARNING, "Finalize not properly closed Powershell session!");
+            Logger.getLogger(PowerShell.class.getName()).log(Level.WARNING, "Finalize executed because Powershell session was not properly closed!");
             close();
         }       
         super.finalize();
