@@ -28,76 +28,81 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Allows to open a session into PowerShell console and launch different commands.<br>
- * This class cannot be directly instantiated. Instead, use the method PowerShell.openSession
- * and call the commands using the returned instance. <p>
- * Once the session is finished, call close() method in order to free the resources.
- * 
+ * Allows to open a session into PowerShell console and launch different
+ * commands.<br>
+ * This class cannot be directly instantiated. Instead, use the method
+ * PowerShell.openSession and call the commands using the returned instance.
+ * <p>
+ * Once the session is finished, call close() method in order to free the
+ * resources.
+ *
  * @author Javier Garcia Alonso
  */
 public class PowerShell {
+
     private Process p;
     private PrintWriter commandWriter;
     private boolean closed = false;
 
     private ExecutorService threadpool;
-    
-    private static final int MAX_THREADS = 3;
+
+    private static final int MAX_THREADS = 3; //standard output + error output + session close thread
 
     //Private constructor.
-    private PowerShell(){        
+    private PowerShell() {
     }
 
     //Initializes PowerShell console in which we will enter the commands
-    private PowerShell initalize() throws PowerShellNotAvailableException{
+    private PowerShell initalize() throws PowerShellNotAvailableException {
         ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-NoExit", "-Command", "-");
         try {
             p = pb.start();
         } catch (IOException ex) {
             throw new PowerShellNotAvailableException(
-                    "Cannot execute PowerShell.exe. Either your are not using a Windows system or PowerShell is not installed", ex);
+                    "Cannot execute PowerShell.exe. Please make sure that it is istalled in your system", ex);
         }
-        
+
         commandWriter
                 = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
-        
+
         return this;
     }
-    
+
     /**
-     * Creates a session in PowerShell console an returns an instance which allows 
-     * to execute commands in PowerShell context
-     * 
+     * Creates a session in PowerShell console an returns an instance which
+     * allows to execute commands in PowerShell context
+     *
      * @return an instance of the class
-     * @throws PowerShellNotAvailableException if PowerShell is not installed in the system
+     * @throws PowerShellNotAvailableException if PowerShell is not installed in
+     * the system
      */
     public static PowerShell openSession() throws PowerShellNotAvailableException {
         PowerShell powerShell = new PowerShell();
-        
+
         return powerShell.initalize();
     }
 
     /**
-     * Launch a PowerShell command.<p> 
-     * This method launch a thread which will be executed in the alreade 
-     * created PowerShell console context
-     * 
+     * Launch a PowerShell command.<p>
+     * This method launch a thread which will be executed in the already created
+     * PowerShell console context
+     *
      * @param command the command to call. Ex: dir
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable commandProcessor = new PowerShellCommandProcessor(commandWriter, p.getInputStream());
-        Callable commandProcessorError = new PowerShellCommandProcessor(commandWriter, p.getErrorStream());
-        
+        Callable commandProcessor = new PowerShellCommandProcessor("standard", commandWriter, p.getInputStream(), true);
+        Callable commandProcessorError = new PowerShellCommandProcessor("error", commandWriter, p.getErrorStream(), false);
+
         String commandOutput = "";
         boolean isError = false;
-        
+
         this.threadpool = Executors.newFixedThreadPool(MAX_THREADS);
         Future<String> result = threadpool.submit(commandProcessor);
         Future<String> resultError = threadpool.submit(commandProcessorError);
-        
+
         //Launch command
-        commandWriter.println(command);        
+        commandWriter.println(command);
 
         try {
             while (!result.isDone() && !resultError.isDone()) {
@@ -110,44 +115,67 @@ public class PowerShell {
                 isError = true;
                 commandOutput = resultError.get();
             }
-        } catch (InterruptedException ex){
+        } catch (InterruptedException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         } catch (ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         }
-        
+
         return new PowerShellResponse(isError, commandOutput);
     }
 
     /**
      * Closes all the resources used to maintain the PowerShell context
      */
-    public void close() {        
-        try {
-            commandWriter.println("exit");        
-            try {            
-                p.waitFor();
+    public void close() {
+        if (!this.closed) {
+            try {
+                Future<String> closeTask = threadpool.submit(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        commandWriter.println("exit");                        
+                        p.waitFor();                        
+                        return "OK";
+                    }
+                });
+                int timeout = 3000;
+                int closingTime = 0;
+                while (!closeTask.isDone() && !closeTask.isDone()) {
+                    if (closingTime > timeout) {
+                        Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when closing PowerShell: TIMEOUT!");
+                        break;
+                    }
+                    Thread.sleep(10);
+                    closingTime += 10;
+                }
             } catch (InterruptedException ex) {
-                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
+                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when pwhen closing PowerShell", ex);
+            } finally {
+                commandWriter.close();
+                if (this.threadpool != null) {
+                    this.threadpool.shutdownNow();
+
+                    while (!this.threadpool.isTerminated()) {
+                        //wait
+                    }
+                }
+                this.closed = true;
             }
-        } finally {            
-            commandWriter.close();
-            this.threadpool.shutdown();
-            this.closed = true;
         }
     }
 
     /**
-     * Try to close the PowerShell console if the object is collected by garbage 
+     * Try to close the PowerShell console if the object is collected by garbage
      * collector
-     * 
-     * @throws Throwable 
+     *
+     * @throws Throwable
      */
     @Override
     protected void finalize() throws Throwable {
         if (!this.closed) {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.WARNING, "Finalize not properly closed Powershell session!");
             close();
-        }
-        super.finalize();        
+        }       
+        super.finalize();
     }
 }
