@@ -25,7 +25,7 @@ https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/1.2/jPowerShell-1.
 Use Powershell is very easy with this util.
 
 This is a clear example of how to use it:
-
+```java
        PowerShell powerShell = null;
        try {
            //Creates PowerShell session (we can execute several commands in the same session)
@@ -44,3 +44,4 @@ This is a clear example of how to use it:
            if (powerShell != null)
              powerShell.close();
        }
+```
