@@ -22,7 +22,7 @@ https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/1.2/jPowerShell-1.
 
 ## Basic Usage ##
 
-The best way to document is with a good example:
+The best way to document is providing a good example:
 ```java
    PowerShell powerShell = null;
    try {
