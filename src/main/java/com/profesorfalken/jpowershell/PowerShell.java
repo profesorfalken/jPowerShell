@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.profesorfalken.jpowershell;
+package com.profesorfalken.jpowershell;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -55,7 +55,7 @@ public class PowerShell {
             p = pb.start();
         } catch (IOException ex) {
             throw new PowerShellNotAvailableException(
-                    "Cannot execute PowerShell.exe. Please make sure that it is istalled in your system", ex);
+                    "Cannot execute PowerShell.exe. Either your are not using a Windows system or PowerShell is not installed", ex);
         }
         
         commandWriter
@@ -79,22 +79,22 @@ public class PowerShell {
 
     /**
      * Launch a PowerShell command.<p> 
-     * This method launch a thread which will be executed in the already
+     * This method launch a thread which will be executed in the alreade 
      * created PowerShell console context
      * 
      * @param command the command to call. Ex: dir
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable commandProcessor = new PowerShellCommandProcessor(commandWriter, p.getInputStream(), true);
-        //Callable commandProcessorError = new PowerShellCommandProcessor(commandWriter, p.getErrorStream(), false);
+        Callable commandProcessor = new PowerShellCommandProcessor(commandWriter, p.getInputStream());
+        Callable commandProcessorError = new PowerShellCommandProcessor(commandWriter, p.getErrorStream());
         
         String commandOutput = "";
         boolean isError = false;
         
         this.threadpool = Executors.newFixedThreadPool(MAX_THREADS);
         Future<String> result = threadpool.submit(commandProcessor);
-        Future<String> resultError = result;//threadpool.submit(commandProcessorError);
+        Future<String> resultError = threadpool.submit(commandProcessorError);
         
         //Launch command
         commandWriter.println(command);        
@@ -132,9 +132,7 @@ public class PowerShell {
             }
         } finally {            
             commandWriter.close();
-            if (this.threadpool != null) {
-                this.threadpool.shutdown();
-            }
+            this.threadpool.shutdown();
             this.closed = true;
         }
     }

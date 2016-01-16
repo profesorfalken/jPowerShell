@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.profesorfalken.jpowershell;
+package com.profesorfalken.jpowershell;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,11 +34,8 @@ import java.util.logging.Logger;
 class PowerShellCommandProcessor implements Callable {
 
     private static final String CRLF = "\r\n";
-    private static final int WAIT_PAUSE = 3;
-    private static final int MAX_WAIT = 2000;
 
     private final BufferedReader reader;
-    private final boolean checkTimeout;
 
     /**
      * Constructor that takes the output and the input of the PowerShell session
@@ -46,10 +43,9 @@ class PowerShellCommandProcessor implements Callable {
      * @param commandWriter the input to the PowerShell console
      * @param inputStream the stream needed to read the command output
      */
-    public PowerShellCommandProcessor(PrintWriter commandWriter, InputStream inputStream, boolean checkTimeout) {
-        this.reader = new BufferedReader(new InputStreamReader(
+    public PowerShellCommandProcessor(PrintWriter commandWriter, InputStream inputStream) {
+        reader = new BufferedReader(new InputStreamReader(
                 inputStream));
-        this.checkTimeout = checkTimeout;
     }
 
     /**
@@ -59,42 +55,23 @@ class PowerShellCommandProcessor implements Callable {
      * @throws IOException 
      */
     @Override
-    public String call() throws IOException, InterruptedException {
+    public String call() throws IOException {
         String line;
-        StringBuilder powerShellOutput = new StringBuilder();        
+        StringBuilder powerShellOutput = new StringBuilder();
 
-        if (startReading()) {
-            while (null != (line = this.reader.readLine())) {
-                powerShellOutput.append(line).append(CRLF);
-                try {                    
-                    if (!continueReading()) {
-                        break;
-                    }
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        while (null != (line = this.reader.readLine())) {
+            powerShellOutput.append(line).append(CRLF);
+            try {
+                //Wait a bit to give time to update the reader status
+                Thread.sleep(5);
+                if (!this.reader.ready()) {
+                    break;
                 }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
 
         return powerShellOutput.toString();
-    }
-    
-    private boolean startReading() throws IOException, InterruptedException {
-        int timeWaiting = 0;
-        
-        while (!this.reader.ready()) {            
-            Thread.sleep(WAIT_PAUSE);
-            timeWaiting += WAIT_PAUSE;
-            if (checkTimeout && timeWaiting > MAX_WAIT) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    private boolean continueReading() throws IOException, InterruptedException {
-        Thread.sleep(WAIT_PAUSE);
-        return this.reader.ready();
     }
 }
