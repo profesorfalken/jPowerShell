@@ -31,10 +31,20 @@ public class PowerShellResponse {
         this.commandOutput = commandOutput;
     }
 
+    /**
+     * Retrieves if the command finished in error
+     * 
+     * @return boolean value
+     */
     public boolean isError() {
         return error;
     }
     
+    /**
+     * Retrieves the content returned by the executed command
+     * 
+     * @return boolean value
+     */
     public String getCommandOutput() {
         return commandOutput;
     }

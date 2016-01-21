@@ -14,27 +14,9 @@ import org.junit.Test;
  */
 public class PowerShellTest {
 
-    public PowerShellTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     /**
      * Test of openSession method, of class PowerShell.
+     * @throws java.lang.Exception
      */
     @Test
     public void testListDir() throws Exception {
@@ -51,6 +33,7 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
+     * @throws java.lang.Exception
      */
     @Test
     public void testListProcesses() throws Exception {
@@ -69,6 +52,7 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
+     * @throws java.lang.Exception
      */
     @Test
     public void testCheckBIOSByWMI() throws Exception {
@@ -84,6 +68,7 @@ public class PowerShellTest {
     
     /**
      * Test of empty response
+     * @throws java.lang.Exception
      */
     @Test
     public void testCheckEmptyResponse() throws Exception {
@@ -99,6 +84,7 @@ public class PowerShellTest {
     
     /**
      * Test of long command
+     * @throws java.lang.Exception
      */
     @Test
     public void testLongCommand() throws Exception {
@@ -114,6 +100,7 @@ public class PowerShellTest {
     
     /**
      * Test error case.
+     * @throws java.lang.Exception
      */
     @Test
     public void testErrorCase() throws Exception {
@@ -129,6 +116,7 @@ public class PowerShellTest {
     
     /**
      * Test of openSession method, of class PowerShell.
+     * @throws java.lang.Exception
      */
     @Test
     public void testMultipleCalls() throws Exception {
