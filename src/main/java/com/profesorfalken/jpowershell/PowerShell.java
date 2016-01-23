@@ -16,9 +16,14 @@
 package com.profesorfalken.jpowershell;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -39,11 +44,13 @@ import java.util.logging.Logger;
  * @author Javier Garcia Alonso
  */
 public class PowerShell {
+    //Line break
+    private static final String CRLF = "\r\n";
 
     //Process to store PowerShell session
     private Process p;
     //Writer to send commands
-    private PrintWriter commandWriter;
+    private PrintWriter commandWriter;        
     
     //Threaded session variables
     private boolean closed = false;
@@ -151,7 +158,7 @@ public class PowerShell {
                     closingTime += WAIT_PAUSE;
                 }
             } catch (InterruptedException ex) {
-                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when pwhen closing PowerShell", ex);
+                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when when closing PowerShell", ex);
             } finally {
                 commandWriter.close();
                 if (this.threadpool != null) {
@@ -164,6 +171,23 @@ public class PowerShell {
                 this.closed = true;
             }
         }
+    }
+    
+    public static PowerShellResponse executeSingleCommand(String command) {
+        PowerShell session = null;
+        PowerShellResponse response = null;
+        try {
+            session = PowerShell.openSession();
+            
+            response = session.executeCommand(command);            
+        } catch (PowerShellNotAvailableException ex) {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "PowerShell not available", ex);
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+        return response;
     }
 
     /**

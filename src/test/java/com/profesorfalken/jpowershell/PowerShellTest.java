@@ -1,10 +1,6 @@
 package com.profesorfalken.jpowershell;
 
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -31,6 +27,24 @@ public class PowerShellTest {
 
             powerShell.close();
         }
+    }
+    
+    /**
+     * Test of openSession method, of class PowerShell.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testSimpleListDir() throws Exception {
+        System.out.println("start testListDir");
+        if (OSDetector.isWindows()) {
+            
+            PowerShellResponse response = PowerShell.executeSingleCommand("dir");
+
+            System.out.println("List Directory:" + response.getCommandOutput());
+
+            Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
+        }
+        System.out.println("end testListDir");
     }
 
     /**
