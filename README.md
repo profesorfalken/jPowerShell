@@ -35,7 +35,7 @@ The best way to document is providing a good example:
 ```
 
 
-#### Executing multiple commands using the same PowerShell session ####
+#### Executing one or multiple commands using the same PowerShell session ####
 
 ```java
    PowerShell powerShell = null;
