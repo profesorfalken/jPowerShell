@@ -23,6 +23,20 @@ https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/1.2/jPowerShell-1.
 ## Basic Usage ##
 
 The best way to document is providing a good example:
+
+**Single command execution**
+
+```java
+   //Execute a command in PowerShell session
+   PowerShellResponse response = powerShell.executeSingleCommand("Get-Process");
+   
+   //Print results
+   System.out.println("List Processes:" + response.getCommandOutput());
+```
+
+
+**Executing multiple commands using the same PowerShell session**
+
 ```java
    PowerShell powerShell = null;
    try {
@@ -34,6 +48,12 @@ The best way to document is providing a good example:
        
        //Print results
        System.out.println("List Processes:" + response.getCommandOutput());
+       
+       //Execute another command in the same PowerShell session
+       response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+       
+       //Print results
+       System.out.println("BIOS information:" + response.getCommandOutput());
    } catch(PowerShellNotAvailableException ex) {
        //Handle error when PowerShell is not available in the system
        //Maybe try in another way?
