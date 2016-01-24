@@ -14,7 +14,7 @@ For example, for Maven you have just to add to your pom.xml:
       <dependency>
 	        <groupId>com.profesorfalken</groupId>
 	        <artifactId>jPowerShell</artifactId>
-	        <version>1.2</version>
+	        <version>1.3</version>
         </dependency>
 
 Instead, you can direct download the JAR file and add it to your classpath. 
