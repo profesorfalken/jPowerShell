@@ -24,7 +24,7 @@ https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/1.3/jPowerShell-1.
 
 The best way to document is providing a good example:
 
-**Single command execution**
+#### Single command execution ####
 
 ```java
    //Execute a command in PowerShell session
@@ -35,7 +35,7 @@ The best way to document is providing a good example:
 ```
 
 
-**Executing multiple commands using the same PowerShell session**
+#### Executing multiple commands using the same PowerShell session ####
 
 ```java
    PowerShell powerShell = null;
