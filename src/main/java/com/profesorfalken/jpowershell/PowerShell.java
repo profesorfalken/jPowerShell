@@ -75,6 +75,9 @@ public class PowerShell {
 
         commandWriter
                 = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
+        
+        //Init thread pool
+        this.threadpool = Executors.newFixedThreadPool(MAX_THREADS);
 
         return this;
     }
@@ -107,8 +110,7 @@ public class PowerShell {
 
         String commandOutput = "";
         boolean isError = false;
-
-        this.threadpool = Executors.newFixedThreadPool(MAX_THREADS);
+        
         Future<String> result = threadpool.submit(commandProcessor);
         Future<String> resultError = threadpool.submit(commandProcessorError);
 
