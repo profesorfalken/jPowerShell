@@ -16,14 +16,9 @@
 package com.profesorfalken.jpowershell;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -132,6 +127,9 @@ public class PowerShell {
         } catch (ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         }
+        
+        result.cancel(true);
+        resultError.cancel(true);
 
         return new PowerShellResponse(isError, commandOutput);
     }

@@ -12,6 +12,7 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -28,16 +29,17 @@ public class PowerShellTest {
             powerShell.close();
         }
     }
-    
+
     /**
      * Test of openSession method, of class PowerShell.
+     *
      * @throws java.lang.Exception
      */
     @Test
     public void testSimpleListDir() throws Exception {
         System.out.println("start testListDir");
         if (OSDetector.isWindows()) {
-            
+
             PowerShellResponse response = PowerShell.executeSingleCommand("dir");
 
             System.out.println("List Directory:" + response.getCommandOutput());
@@ -49,6 +51,7 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -68,6 +71,7 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -86,6 +90,7 @@ public class PowerShellTest {
 
     /**
      * Test of empty response
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -104,6 +109,7 @@ public class PowerShellTest {
 
     /**
      * Test of long command
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -122,6 +128,7 @@ public class PowerShellTest {
 
     /**
      * Test error case.
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -140,6 +147,7 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -158,6 +166,38 @@ public class PowerShellTest {
             Assert.assertTrue("Cannot find SMBIOSBIOSVersion", response.getCommandOutput().contains("SMBIOSBIOSVersion"));
 
             powerShell.close();
+        }
+    }
+
+    /**
+     * Test loop.
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testLoop() throws Exception {
+        System.out.println("testLoop");
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = null;
+            try {
+                powerShell = PowerShell.openSession();
+                for (int i = 0; i < 10; i++) {
+                    System.out.print("Cycle: " + i);
+                    //Thread.sleep(3000);
+
+                    String output = powerShell.executeCommand("date").getCommandOutput().trim();
+
+                    System.out.println("\t" + output);
+                }
+            } catch (PowerShellNotAvailableException ex) {
+                //Handle error when PowerShell is not available in the system
+                //Maybe try in another way?
+            } finally {
+                //Always close PowerShell session to free resources.
+                if (powerShell != null) {
+                    powerShell.close();
+                }
+            }
         }
     }
 }
