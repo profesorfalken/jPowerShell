@@ -200,4 +200,43 @@ public class PowerShellTest {
             }
         }
     }
+
+    /**
+     * Test long loop.
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testLongLoop() throws Exception {
+        System.out.println("testLongLoop");
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = null;
+            try {
+                powerShell = PowerShell.openSession();
+                for (int i = 0; i < 100; i++) {
+                    System.out.print("Cycle: " + i);
+
+                    //Thread.sleep(100);
+
+                    PowerShellResponse response = powerShell.executeCommand("date"); // Line 17 (see exception below)
+
+                    if (response.isError()) {
+                        System.out.println("error"); // never called
+                    }
+
+                    String output = "<" + response.getCommandOutput().trim() + ">";
+
+                    System.out.println("\t" + output);
+                }
+            } catch (PowerShellNotAvailableException ex) {
+                //Handle error when PowerShell is not available in the system
+                //Maybe try in another way?
+            } finally {
+                //Always close PowerShell session to free resources.
+                if (powerShell != null) {
+                    powerShell.close();
+                }
+            }
+        }
+    }
 }
