@@ -123,15 +123,19 @@ public class PowerShell {
                 isError = true;
                 commandOutput = resultError.get();
             }
-            Thread.sleep(WAIT_PAUSE);
+            //Thread.sleep(WAIT_PAUSE);
         } catch (InterruptedException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         } catch (ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         }
         
-        result.cancel(true);
-        resultError.cancel(true);
+        if ((result.isDone() || resultError.isDone()) && !commandOutput.trim().isEmpty()) {
+            result.cancel(true);
+            resultError.cancel(true);
+        } else {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Cannot cancel result result.isDone(): {0} resultError.isDone(): {1} commandOutput.trim(): {2}", new Object[]{result.isDone(), resultError.isDone(), commandOutput.trim()});
+        }
 
         return new PowerShellResponse(isError, commandOutput);
     }
