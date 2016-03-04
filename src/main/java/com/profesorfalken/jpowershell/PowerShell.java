@@ -117,13 +117,13 @@ public class PowerShell {
             while (!result.isDone() && !resultError.isDone()) {
                 Thread.sleep(WAIT_PAUSE);
             }
+            Thread.sleep(WAIT_PAUSE);
             if (result.isDone()) {
                 commandOutput = result.get();
             } else {
                 isError = true;
                 commandOutput = resultError.get();
             }
-            //Thread.sleep(WAIT_PAUSE);
         } catch (InterruptedException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         } catch (ExecutionException ex) {
