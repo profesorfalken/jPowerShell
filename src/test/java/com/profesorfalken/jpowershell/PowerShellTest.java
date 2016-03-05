@@ -15,7 +15,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testListDir() throws Exception {
         System.out.println("testListDir");
         if (OSDetector.isWindows()) {
@@ -35,7 +35,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testSimpleListDir() throws Exception {
         System.out.println("start testListDir");
         if (OSDetector.isWindows()) {
@@ -54,7 +54,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testListProcesses() throws Exception {
         System.out.println("testListProcesses");
         if (OSDetector.isWindows()) {
@@ -74,7 +74,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testCheckBIOSByWMI() throws Exception {
         System.out.println("testCheckBIOSByWMI");
         if (OSDetector.isWindows()) {
@@ -93,7 +93,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testCheckEmptyResponse() throws Exception {
         System.out.println("testCheckEmptyResponse");
         if (OSDetector.isWindows()) {
@@ -112,7 +112,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testLongCommand() throws Exception {
         System.out.println("testLongCommand");
         if (OSDetector.isWindows()) {
@@ -131,7 +131,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testErrorCase() throws Exception {
         System.out.println("testErrorCase");
         if (OSDetector.isWindows()) {
@@ -150,7 +150,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testMultipleCalls() throws Exception {
         System.out.println("testMultiple");
         if (OSDetector.isWindows()) {
@@ -174,7 +174,7 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    //@Test
+    @Test
     public void testLoop() throws Exception {
         System.out.println("testLoop");
         if (OSDetector.isWindows()) {

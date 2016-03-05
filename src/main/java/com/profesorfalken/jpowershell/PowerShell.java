@@ -117,7 +117,6 @@ public class PowerShell {
             while (!result.isDone() && !resultError.isDone()) {
                 Thread.sleep(WAIT_PAUSE);
             }
-            Thread.sleep(MAX_WAIT);
             if (result.isDone()) {
                 commandOutput = result.get();
             } else {

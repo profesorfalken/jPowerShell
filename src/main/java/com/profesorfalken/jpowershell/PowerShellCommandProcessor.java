@@ -26,22 +26,22 @@ import java.util.logging.Logger;
 
 /**
  * Processor used to send commands to PowerShell console.<p^>
- * It works as an independent thread and its results are collected using 
- * the Future interface.
- * 
+ * It works as an independent thread and its results are collected using the
+ * Future interface.
+ *
  * @author Javier Garcia Alonso
  */
 class PowerShellCommandProcessor implements Callable {
 
-    private static final String CRLF = "\r\n";    
+    private static final String CRLF = "\r\n";
 
     private final BufferedReader reader;
-    private final boolean checkTimeout;
+    private volatile boolean checkTimeout;
     private final String name;
 
     /**
      * Constructor that takes the output and the input of the PowerShell session
-     * 
+     *
      * @param commandWriter the input to the PowerShell console
      * @param inputStream the stream needed to read the command output
      */
@@ -54,45 +54,47 @@ class PowerShellCommandProcessor implements Callable {
 
     /**
      * Calls the command and returns its output
-     * 
+     *
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     @Override
     public String call() throws IOException, InterruptedException {
         String line;
-        StringBuilder powerShellOutput = new StringBuilder();        
+        StringBuilder powerShellOutput = new StringBuilder();
 
-        if (startReading()) {
-            while (null != (line = this.reader.readLine())) {
-                powerShellOutput.append(line).append(CRLF);
-                try {                    
-                    if (!continueReading()) {
-                        break;
+        synchronized(this) {
+            if (startReading()) {
+                while (null != (line = this.reader.readLine())) {
+                    powerShellOutput.append(line).append(CRLF);
+                    try {
+                        if (!continueReading()) {
+                            break;
+                        }
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
 
         return powerShellOutput.toString();
     }
-    
-    //Checks when we can start reading the output. Timeout if it takes to long to avoid hangs
+
+    //Checks when we can start reading the output. Timeout if it takes too long in order to avoid hangs
     private boolean startReading() throws IOException, InterruptedException {
         int timeWaiting = 0;
-        
-        while (!this.reader.ready()) {            
+
+        while (!this.reader.ready()) {
             Thread.sleep(PowerShell.WAIT_PAUSE);
             timeWaiting += PowerShell.WAIT_PAUSE;
             if (checkTimeout && timeWaiting > PowerShell.MAX_WAIT) {
                 return false;
-            }            
+            }
         }
         return true;
     }
-    
+
     //Checks when we the reader can continue to read.
     private boolean continueReading() throws IOException, InterruptedException {
         Thread.sleep(PowerShell.WAIT_PAUSE);
