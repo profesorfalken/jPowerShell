@@ -36,8 +36,11 @@ class PowerShellCommandProcessor implements Callable {
     private static final String CRLF = "\r\n";
 
     private final BufferedReader reader;
-    private volatile boolean checkTimeout;
+    private final boolean checkTimeout;
     private final String name;
+    
+    //Create static lock in order to synchronize the reading process
+    private static final Object LOCK = new Object();
 
     /**
      * Constructor that takes the output and the input of the PowerShell session
@@ -63,7 +66,7 @@ class PowerShellCommandProcessor implements Callable {
         String line;
         StringBuilder powerShellOutput = new StringBuilder();
 
-        synchronized(this) {
+        synchronized(LOCK) {
             if (startReading()) {
                 while (null != (line = this.reader.readLine())) {
                     powerShellOutput.append(line).append(CRLF);
