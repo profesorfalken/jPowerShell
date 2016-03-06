@@ -131,8 +131,6 @@ public class PowerShell {
             //Close and cancel processors/threads
             ((PowerShellCommandProcessor) commandProcessor).close();
             ((PowerShellCommandProcessor) commandProcessorError).close();
-            result.cancel(true);
-            resultError.cancel(true);
         }
 
         return new PowerShellResponse(isError, commandOutput);
