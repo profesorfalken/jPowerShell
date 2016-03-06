@@ -39,20 +39,21 @@ import java.util.logging.Logger;
  * @author Javier Garcia Alonso
  */
 public class PowerShell {
+
     //Line break
     private static final String CRLF = "\r\n";
 
     //Process to store PowerShell session
     private Process p;
     //Writer to send commands
-    private PrintWriter commandWriter;        
-    
+    private PrintWriter commandWriter;
+
     //Threaded session variables
     private boolean closed = false;
     private ExecutorService threadpool;
     private static final int MAX_THREADS = 3; //standard output + error output + session close thread
     static final int WAIT_PAUSE = 10;
-    static final int MAX_WAIT = 2000;
+    static final int MAX_WAIT = 5000;
 
     //Private constructor.
     private PowerShell() {
@@ -70,7 +71,7 @@ public class PowerShell {
 
         commandWriter
                 = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
-        
+
         //Init thread pool
         this.threadpool = Executors.newFixedThreadPool(MAX_THREADS);
 
@@ -100,12 +101,12 @@ public class PowerShell {
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable commandProcessor = new PowerShellCommandProcessor("standard", commandWriter, p.getInputStream(), true);
-        Callable commandProcessorError = new PowerShellCommandProcessor("error", commandWriter, p.getErrorStream(), false);
+        Callable commandProcessor = new PowerShellCommandProcessor("standard", commandWriter, p.getInputStream());
+        Callable commandProcessorError = new PowerShellCommandProcessor("error", commandWriter, p.getErrorStream());
 
         String commandOutput = "";
         boolean isError = false;
-        
+
         Future<String> result = threadpool.submit(commandProcessor);
         Future<String> resultError = threadpool.submit(commandProcessorError);
 
@@ -126,10 +127,11 @@ public class PowerShell {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         } catch (ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
+        } finally {
+            //Close and cancel processors/threads
+            ((PowerShellCommandProcessor) commandProcessor).close();
+            ((PowerShellCommandProcessor) commandProcessorError).close();
         }
-        
-        result.cancel(true);
-        resultError.cancel(true);
 
         return new PowerShellResponse(isError, commandOutput);
     }
@@ -143,8 +145,8 @@ public class PowerShell {
                 Future<String> closeTask = threadpool.submit(new Callable<String>() {
                     @Override
                     public String call() throws Exception {
-                        commandWriter.println("exit");                        
-                        p.waitFor();                        
+                        commandWriter.println("exit");
+                        p.waitFor();
                         return "OK";
                     }
                 });
@@ -172,14 +174,14 @@ public class PowerShell {
             }
         }
     }
-    
+
     public static PowerShellResponse executeSingleCommand(String command) {
         PowerShell session = null;
         PowerShellResponse response = null;
         try {
             session = PowerShell.openSession();
-            
-            response = session.executeCommand(command);            
+
+            response = session.executeCommand(command);
         } catch (PowerShellNotAvailableException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "PowerShell not available", ex);
         } finally {
@@ -201,7 +203,7 @@ public class PowerShell {
         if (!this.closed) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.WARNING, "Finalize executed because Powershell session was not properly closed!");
             close();
-        }       
+        }
         super.finalize();
     }
 }
