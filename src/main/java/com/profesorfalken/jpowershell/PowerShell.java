@@ -128,7 +128,7 @@ public class PowerShell {
         } catch (ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         } finally {
-            //Close and cancel processors/threads
+            //issue #2. Close and cancel processors/threads - Thanks to r4lly for helping me here
             ((PowerShellCommandProcessor) commandProcessor).close();
             ((PowerShellCommandProcessor) commandProcessorError).close();
         }
