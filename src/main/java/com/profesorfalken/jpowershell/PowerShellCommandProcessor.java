@@ -19,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,7 +45,7 @@ class PowerShellCommandProcessor implements Callable {
      * @param commandWriter the input to the PowerShell console
      * @param inputStream the stream needed to read the command output
      */
-    public PowerShellCommandProcessor(String name, PrintWriter commandWriter, InputStream inputStream) {
+    public PowerShellCommandProcessor(String name, InputStream inputStream) {
         this.reader = new BufferedReader(new InputStreamReader(
                 inputStream));
         this.name = name;
@@ -60,23 +59,28 @@ class PowerShellCommandProcessor implements Callable {
      */
     @Override
     public String call() throws IOException, InterruptedException {
-        String line;
         StringBuilder powerShellOutput = new StringBuilder();
 
         if (startReading()) {
-            while (null != (line = this.reader.readLine())) {
-                powerShellOutput.append(line).append(CRLF);
-                try {
-                    if (!continueReading() || this.closed) {
-                        break;
-                    }
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            readData(powerShellOutput);
         }
 
         return powerShellOutput.toString();
+    }
+
+    //Reads all data from output
+    private void readData(StringBuilder powerShellOutput) throws IOException {
+        String line;
+        while (null != (line = this.reader.readLine())) {
+            powerShellOutput.append(line).append(CRLF);
+            try {
+                if (!continueReading() || this.closed) {
+                    break;
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     //Checks when we can start reading the output. Timeout if it takes too long in order to avoid hangs
@@ -100,15 +104,15 @@ class PowerShellCommandProcessor implements Callable {
     }
 
     /**
-    * Closes the command processor, cancelling the current work if not finish
-    */
+     * Closes the command processor, cancelling the current work if not finish
+     */
     public void close() {
         this.closed = true;
     }
-    
+
     /**
      * Return the given name of the command processor
-     * 
+     *
      * @return name of the command processor
      */
     public String getName() {

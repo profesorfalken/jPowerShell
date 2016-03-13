@@ -40,10 +40,8 @@ import java.util.logging.Logger;
  */
 public class PowerShell {
 
-    //Line break
-    private static final String CRLF = "\r\n";
-
     //Process to store PowerShell session
+
     private Process p;
     //Writer to send commands
     private PrintWriter commandWriter;
@@ -101,8 +99,8 @@ public class PowerShell {
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable commandProcessor = new PowerShellCommandProcessor("standard", commandWriter, p.getInputStream());
-        Callable commandProcessorError = new PowerShellCommandProcessor("error", commandWriter, p.getErrorStream());
+        Callable commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream());
+        Callable commandProcessorError = new PowerShellCommandProcessor("error", p.getErrorStream());
 
         String commandOutput = "";
         boolean isError = false;
@@ -150,15 +148,7 @@ public class PowerShell {
                         return "OK";
                     }
                 });
-                int closingTime = 0;
-                while (!closeTask.isDone() && !closeTask.isDone()) {
-                    if (closingTime > MAX_WAIT) {
-                        Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when closing PowerShell: TIMEOUT!");
-                        break;
-                    }
-                    Thread.sleep(WAIT_PAUSE);
-                    closingTime += WAIT_PAUSE;
-                }
+                waitUntilClose(closeTask);
             } catch (InterruptedException ex) {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when when closing PowerShell", ex);
             } finally {
@@ -175,6 +165,24 @@ public class PowerShell {
         }
     }
 
+    private static void waitUntilClose(Future<String> task) throws InterruptedException {
+        int closingTime = 0;
+        while (!task.isDone()) {
+            if (closingTime > MAX_WAIT) {
+                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when closing PowerShell: TIMEOUT!");
+                break;
+            }
+            Thread.sleep(WAIT_PAUSE);
+            closingTime += WAIT_PAUSE;
+        }
+    }
+
+    /**
+     * Execute a single command in PowerShell console and gets result
+     * 
+     * @param command the command to execute
+     * @return response with the output of the command
+     */
     public static PowerShellResponse executeSingleCommand(String command) {
         PowerShell session = null;
         PowerShellResponse response = null;
@@ -190,20 +198,5 @@ public class PowerShell {
             }
         }
         return response;
-    }
-
-    /**
-     * Try to close the PowerShell console if the object is collected by garbage
-     * collector
-     *
-     * @throws Throwable
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        if (!this.closed) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.WARNING, "Finalize executed because Powershell session was not properly closed!");
-            close();
-        }
-        super.finalize();
     }
 }
