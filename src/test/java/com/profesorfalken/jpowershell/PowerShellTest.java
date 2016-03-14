@@ -202,6 +202,31 @@ public class PowerShellTest {
                 powerShell.close();
             }
         }
+        
+        try {
+            //Creates PowerShell session (we can execute several commands in the same session)
+            powerShell = PowerShell.openSession();
+
+            //Execute a command in PowerShell session
+            PowerShellResponse response = powerShell.executeCommand("Get-Process");
+
+            //Print results
+            System.out.println("List Processes:" + response.getCommandOutput());
+
+            //Execute another command in the same PowerShell session
+            response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+
+            //Print results
+            System.out.println("BIOS information:" + response.getCommandOutput());
+        } catch (PowerShellNotAvailableException ex) {
+            //Handle error when PowerShell is not available in the system
+            //Maybe try in another way?
+        } finally {
+            //Always close PowerShell session to free resources.
+            if (powerShell != null) {
+                powerShell.close();
+            }
+        }
     }
 
     /**

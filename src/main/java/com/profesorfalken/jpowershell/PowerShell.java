@@ -152,6 +152,12 @@ public class PowerShell {
             } catch (InterruptedException ex) {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when when closing PowerShell", ex);
             } finally {
+                try {
+                    p.getInputStream().close();
+                    p.getErrorStream().close();
+                } catch (IOException ex) {
+                    Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, null, ex);
+                }                
                 commandWriter.close();
                 if (this.threadpool != null) {
                     this.threadpool.shutdownNow();
