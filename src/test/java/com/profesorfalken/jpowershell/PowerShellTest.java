@@ -202,7 +202,44 @@ public class PowerShellTest {
                 powerShell.close();
             }
         }
-        
+    }
+
+    /**
+     * Test comples loop example.
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testComplexLoop() throws Exception {
+        System.out.println("testExample");
+        PowerShell powerShell = null;
+        try {
+            powerShell = PowerShell.openSession();
+
+            for (int i = 0; i < 10; i++) {
+                PowerShellResponse response = powerShell.executeCommand("Get-Process");
+
+                System.out.println("List Processes:" + response.getCommandOutput());
+
+                response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+
+                System.out.println("BIOS information:" + response.getCommandOutput());
+                
+                response = powerShell.executeCommand("sfdsfdsf");
+                
+                System.out.println("Error:" + response.getCommandOutput());
+                
+                response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+
+                System.out.println("BIOS information:" + response.getCommandOutput());
+            }
+        } catch (PowerShellNotAvailableException ex) {
+        } finally {
+            if (powerShell != null) {
+                powerShell.close();
+            }
+        }
+
         try {
             //Creates PowerShell session (we can execute several commands in the same session)
             powerShell = PowerShell.openSession();

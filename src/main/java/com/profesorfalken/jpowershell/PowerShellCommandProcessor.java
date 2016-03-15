@@ -61,8 +61,13 @@ class PowerShellCommandProcessor implements Callable {
     public String call() throws IOException, InterruptedException {
         StringBuilder powerShellOutput = new StringBuilder();
 
-        if (startReading()) {
-            readData(powerShellOutput);
+        try {
+            if (startReading()) {
+                readData(powerShellOutput);
+            }
+        } catch (IOException ioe) {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
+            return ioe.getMessage();
         }
 
         return powerShellOutput.toString();
