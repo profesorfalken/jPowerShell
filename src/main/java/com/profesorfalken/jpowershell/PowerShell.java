@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -126,9 +127,11 @@ public class PowerShell {
         } catch (ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         } finally {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Closing processors");
             //issue #2. Close and cancel processors/threads - Thanks to r4lly for helping me here
             ((PowerShellCommandProcessor) commandProcessor).close();
             ((PowerShellCommandProcessor) commandProcessorError).close();
+            Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Processors closed");
         }
 
         return new PowerShellResponse(isError, commandOutput);
@@ -138,6 +141,7 @@ public class PowerShell {
      * Closes all the resources used to maintain the PowerShell context
      */
     public void close() {
+        Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Starting close()");
         if (!this.closed) {
             try {
                 Future<String> closeTask = threadpool.submit(new Callable<String>() {
@@ -152,20 +156,25 @@ public class PowerShell {
             } catch (InterruptedException ex) {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when when closing PowerShell", ex);
             } finally {
+                Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Closed. Closing Streams and Writter");
                 try {
                     p.getInputStream().close();
                     p.getErrorStream().close();
                 } catch (IOException ex) {
-                    Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when when closing streams", ex);
                 }                
                 commandWriter.close();
                 if (this.threadpool != null) {
-                    this.threadpool.shutdownNow();
-
-                    while (!this.threadpool.isTerminated()) {
-                        //wait
+                    Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Shutting down threadpool");
+                    try {
+                        this.threadpool.shutdownNow();                        
+                        this.threadpool.awaitTermination(5, TimeUnit.SECONDS);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when when shutting thread pool", ex);
                     }
+                    
                 }
+                Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Closed successfully");
                 this.closed = true;
             }
         }
