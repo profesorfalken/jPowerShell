@@ -29,7 +29,7 @@ The best way to document is providing a good example:
 
 ```java
    //Execute a command in PowerShell session
-   PowerShellResponse response = powerShell.executeSingleCommand("Get-Process");
+   PowerShellResponse response = PowerShell.executeSingleCommand("Get-Process");
    
    //Print results
    System.out.println("List Processes:" + response.getCommandOutput());
