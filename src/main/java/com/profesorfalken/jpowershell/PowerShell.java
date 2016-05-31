@@ -67,9 +67,11 @@ public class PowerShell {
      * replaced just setting it on project classpath
      * 
      * The values that can be overridden are:
+     * <ul>
      * <li>maxThreads: the maximum number of thread to use in pool. 3 is an optimal and default value</li>
      * <li>waitPause: the pause in ms between each loop pooling for a response. Default value is 10</li>
      * <li>maxWait: the maximum wait in ms for the command to execute. Default value is 10000</li>
+     * </ul>
      * 
      * @param config map with the configuration in key/value format
      * @return instance to chain
