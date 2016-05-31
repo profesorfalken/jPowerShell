@@ -19,6 +19,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -50,16 +51,42 @@ public class PowerShell {
     //Threaded session variables
     private boolean closed = false;
     private ExecutorService threadpool;
-    private static final int MAX_THREADS = 3; //standard output + error output + session close thread
-    static final int WAIT_PAUSE = 10;
-    static final int MAX_WAIT = 10000;
+    
+    //Config values
+    private int maxThreads = 3; 
+    private int waitPause = 10;
+    private int maxWait = 10000;
 
     //Private constructor.
     private PowerShell() {
     }
+    
+    /**
+     * Allows to override jPowerShell configuration using a map of key/value <br>
+     * Default values are taken from file <i>jpowershell.properties</i>, which can be 
+     * replaced just setting it on project classpath
+     * 
+     * The values that can be overridden are:
+     * <li>maxThreads: the maximum number of thread to use in pool. 3 is an optimal and default value</li>
+     * <li>waitPause: the pause in ms between each loop pooling for a response. Default value is 10</li>
+     * <li>maxWait: the maximum wait in ms for the command to execute. Default value is 10000</li>
+     * 
+     * @param config map with the configuration in key/value format
+     * @return instance to chain
+     */
+    public PowerShell configuration(Map<String, String> config) {
+        try {
+            this.maxThreads = Integer.valueOf((config != null && config.get("maxThreads") != null) ? config.get("maxThreads") : PowerShellConfig.getConfig().getProperty("maxThreads"));
+            this.waitPause = Integer.valueOf((config != null && config.get("waitPause") != null) ? config.get("waitPause") : PowerShellConfig.getConfig().getProperty("waitPause"));
+            this.maxWait = Integer.valueOf((config != null && config.get("maxWait") != null) ? config.get("maxWait") : PowerShellConfig.getConfig().getProperty("maxWait"));
+        } catch (NumberFormatException nfe) {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Could not read configuration. Use default values.", nfe);
+        }
+        return this;
+    }
 
     //Initializes PowerShell console in which we will enter the commands
-    private PowerShell initalize() throws PowerShellNotAvailableException {
+    private PowerShell initalize() throws PowerShellNotAvailableException {                        
         ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-NoExit", "-Command", "-");
         try {
             p = pb.start();
@@ -72,7 +99,7 @@ public class PowerShell {
                 = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
 
         //Init thread pool
-        this.threadpool = Executors.newFixedThreadPool(MAX_THREADS);
+        this.threadpool = Executors.newFixedThreadPool(this.maxThreads);
 
         return this;
     }
@@ -100,8 +127,10 @@ public class PowerShell {
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream());
-        Callable commandProcessorError = new PowerShellCommandProcessor("error", p.getErrorStream());
+        Callable commandProcessor = new PowerShellCommandProcessor("standard", 
+                p.getInputStream(), this.maxWait, this.waitPause);
+        Callable commandProcessorError = new PowerShellCommandProcessor("error", 
+                p.getErrorStream(), this.maxWait, this.waitPause);
 
         String commandOutput = "";
         boolean isError = false;
@@ -114,7 +143,7 @@ public class PowerShell {
 
         try {
             while (!result.isDone() && !resultError.isDone()) {
-                Thread.sleep(WAIT_PAUSE);
+                Thread.sleep(this.waitPause);
             }
             if (result.isDone()) {
                 commandOutput = result.get();
@@ -174,15 +203,15 @@ public class PowerShell {
         }
     }
 
-    private static void waitUntilClose(Future<String> task) throws InterruptedException {
+    private void waitUntilClose(Future<String> task) throws InterruptedException {
         int closingTime = 0;
         while (!task.isDone()) {
-            if (closingTime > MAX_WAIT) {
+            if (closingTime > maxWait) {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when closing PowerShell: TIMEOUT!");
                 break;
             }
-            Thread.sleep(WAIT_PAUSE);
-            closingTime += WAIT_PAUSE;
+            Thread.sleep(this.waitPause);
+            closingTime += this.waitPause;
         }
     }
 
