@@ -25,14 +25,16 @@ public class PowerShellResponse {
 
     private final boolean error;
     private final String commandOutput;
+    private final boolean timeout;
 
-    PowerShellResponse(boolean isError, String commandOutput) {
+    PowerShellResponse(boolean isError, String commandOutput, boolean timeout) {
         this.error = isError;
         this.commandOutput = commandOutput;
+        this.timeout = timeout;
     }
 
     /**
-     * Retrieves if the command finished in error
+     * True if the command finished in error
      * 
      * @return boolean value
      */
@@ -47,5 +49,14 @@ public class PowerShellResponse {
      */
     public String getCommandOutput() {
         return commandOutput;
+    }
+
+    /**
+     * True if the command finished in timeout
+     * 
+     * @return boolean value
+     */
+    public boolean isTimeout() {
+        return timeout;
     }
 }

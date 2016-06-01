@@ -88,7 +88,7 @@ public class PowerShell {
     }
 
     //Initializes PowerShell console in which we will enter the commands
-    private PowerShell initalize() throws PowerShellNotAvailableException {                        
+    private PowerShell initalize() throws PowerShellNotAvailableException {            
         ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-NoExit", "-Command", "-");
         try {
             p = pb.start();
@@ -116,6 +116,9 @@ public class PowerShell {
      */
     public static PowerShell openSession() throws PowerShellNotAvailableException {
         PowerShell powerShell = new PowerShell();
+        
+        //Start with default configuration
+        powerShell.configuration(null);
 
         return powerShell.initalize();
     }
@@ -136,6 +139,7 @@ public class PowerShell {
 
         String commandOutput = "";
         boolean isError = false;
+        boolean timeout = false;
 
         Future<String> result = threadpool.submit(commandProcessor);
         Future<String> resultError = threadpool.submit(commandProcessorError);
@@ -148,7 +152,11 @@ public class PowerShell {
                 Thread.sleep(this.waitPause);
             }
             if (result.isDone()) {
-                commandOutput = result.get();
+                if (((PowerShellCommandProcessor)commandProcessor).isTimeout()) {
+                    timeout = true;
+                } else {
+                    commandOutput = result.get();                
+                }
             } else {
                 isError = true;
                 commandOutput = resultError.get();
@@ -163,7 +171,7 @@ public class PowerShell {
             ((PowerShellCommandProcessor) commandProcessorError).close();
         }
 
-        return new PowerShellResponse(isError, commandOutput);
+        return new PowerShellResponse(isError, commandOutput, timeout);
     }
 
     /**

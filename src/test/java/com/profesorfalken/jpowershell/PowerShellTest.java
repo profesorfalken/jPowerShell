@@ -1,5 +1,7 @@
 package com.profesorfalken.jpowershell;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -333,6 +335,54 @@ public class PowerShellTest {
                     powerShell.close();
                 }
             }
+        }
+    }
+    
+    /**
+     * Test of long command
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testTimeout() throws Exception {
+        System.out.println("testTimeout");
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = PowerShell.openSession();
+            PowerShellResponse response = null;
+            try {
+                response = powerShell.executeCommand("Start-Sleep -s 15");            
+            } finally {
+                powerShell.close();
+            }
+            
+            Assert.assertNotNull(response);
+            Assert.assertTrue("PS error should finish in timeout", response.isTimeout());
+            
+        }
+    }
+    
+    /**
+     * Test of long command
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testConfiguration() throws Exception {
+        System.out.println("testTimeout");
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = PowerShell.openSession();
+            Map<String, String> config = new HashMap<String, String>();
+            config.put("maxWait", "1000");
+            PowerShellResponse response = null;
+            try {
+                response = powerShell.configuration(config).executeCommand("Start-Sleep -s 10; Get-Process");            
+            } finally {
+                powerShell.close();
+            }
+            
+            Assert.assertNotNull(response);
+            Assert.assertTrue("PS error should finish in timeout", response.isTimeout());
+            
         }
     }
 }

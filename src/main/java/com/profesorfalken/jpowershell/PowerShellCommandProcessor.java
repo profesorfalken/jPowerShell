@@ -38,9 +38,10 @@ class PowerShellCommandProcessor implements Callable {
     private final String name;
 
     private boolean closed = false;
+    private boolean timeout = false;
     
     private final int maxWait;
-    private final int waitPause;
+    private final int waitPause;    
 
     /**
      * Constructor that takes the output and the input of the PowerShell session
@@ -98,9 +99,10 @@ class PowerShellCommandProcessor implements Callable {
         int timeWaiting = 0;
 
         while (!this.reader.ready()) {
-            Thread.sleep(this.maxWait);
+            Thread.sleep(this.waitPause);
             timeWaiting += this.waitPause;
             if ((timeWaiting > this.maxWait) || this.closed) {
+                this.timeout = timeWaiting > this.maxWait;
                 return false;
             }
         }
@@ -127,5 +129,14 @@ class PowerShellCommandProcessor implements Callable {
      */
     public String getName() {
         return this.name;
+    }
+    
+    /**
+     * Return if the execution finished with a timeout
+     *
+     * @return name of the command processor
+     */
+    public boolean isTimeout() {
+        return this.timeout;
     }
 }
