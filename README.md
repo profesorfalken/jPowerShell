@@ -64,3 +64,25 @@ The best way to document is providing a good example:
          powerShell.close();
    }
 ```
+
+#### Configure jPowerShell Session ####
+
+We can easily configure the jPowerShell session:
+
+* *By project* creating a _jpowershell.properties_ file in the classpath of your project and settings the variables you want to override.
+* *By call*, using a map that can be chained to powershell call.
+ 
+For example: 
+
+```java
+    //Set the timeout when waiting for command to terminate to 30 seconds instead of 10 (default)
+    Map<String, String> myConfig = new HashMap<>();
+    myConfig.put("maxWait", "30000");
+    response = powerShell.configure(myConfig).executeCommand("Get-WmiObject Win32_BIOS");
+```
+
+The three variables that can be configured in jPowerShell are: 
+
+*maxThreads*: the maximum number of thread to use in pool. 3 is an optimal and default value
+*waitPause*: the pause in ms between each loop pooling for a response. Default value is 10
+*maxWait*: the maximum wait in ms for the command to execute. Default value is 10000
