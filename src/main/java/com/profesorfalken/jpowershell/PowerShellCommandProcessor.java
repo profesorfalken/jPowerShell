@@ -38,6 +38,10 @@ class PowerShellCommandProcessor implements Callable {
     private final String name;
 
     private boolean closed = false;
+    private boolean timeout = false;
+    
+    private final int maxWait;
+    private final int waitPause;    
 
     /**
      * Constructor that takes the output and the input of the PowerShell session
@@ -45,10 +49,12 @@ class PowerShellCommandProcessor implements Callable {
      * @param commandWriter the input to the PowerShell console
      * @param inputStream the stream needed to read the command output
      */
-    public PowerShellCommandProcessor(String name, InputStream inputStream) {
+    public PowerShellCommandProcessor(String name, InputStream inputStream, int maxWait, int waitPause) {
         this.reader = new BufferedReader(new InputStreamReader(
                 inputStream));
         this.name = name;
+        this.maxWait = maxWait;
+        this.waitPause = waitPause;
     }
 
     /**
@@ -93,9 +99,10 @@ class PowerShellCommandProcessor implements Callable {
         int timeWaiting = 0;
 
         while (!this.reader.ready()) {
-            Thread.sleep(PowerShell.WAIT_PAUSE);
-            timeWaiting += PowerShell.WAIT_PAUSE;
-            if ((timeWaiting > PowerShell.MAX_WAIT) || this.closed) {
+            Thread.sleep(this.waitPause);
+            timeWaiting += this.waitPause;
+            if ((timeWaiting > this.maxWait) || this.closed) {
+                this.timeout = timeWaiting > this.maxWait;
                 return false;
             }
         }
@@ -104,7 +111,7 @@ class PowerShellCommandProcessor implements Callable {
 
     //Checks when we the reader can continue to read.
     private boolean continueReading() throws IOException, InterruptedException {
-        Thread.sleep(PowerShell.WAIT_PAUSE);
+        Thread.sleep(this.waitPause);
         return this.reader.ready();
     }
 
@@ -122,5 +129,14 @@ class PowerShellCommandProcessor implements Callable {
      */
     public String getName() {
         return this.name;
+    }
+    
+    /**
+     * Return if the execution finished with a timeout
+     *
+     * @return name of the command processor
+     */
+    public boolean isTimeout() {
+        return this.timeout;
     }
 }
