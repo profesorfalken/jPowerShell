@@ -84,5 +84,7 @@ For example:
 The three variables that can be configured in jPowerShell are: 
 
 *maxThreads*: the maximum number of thread to use in pool. 3 is an optimal and default value
+
 *waitPause*: the pause in ms between each loop pooling for a response. Default value is 10
+
 *maxWait*: the maximum wait in ms for the command to execute. Default value is 10000
