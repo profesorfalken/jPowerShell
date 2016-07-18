@@ -40,7 +40,7 @@ class PowerShellCommandProcessor implements Callable {
     private boolean closed = false;
     private boolean timeout = false;
     
-    private final int maxWait;
+    private final long maxWait;
     private final int waitPause;    
 
     /**
@@ -49,7 +49,7 @@ class PowerShellCommandProcessor implements Callable {
      * @param commandWriter the input to the PowerShell console
      * @param inputStream the stream needed to read the command output
      */
-    public PowerShellCommandProcessor(String name, InputStream inputStream, int maxWait, int waitPause) {
+    public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause) {
         this.reader = new BufferedReader(new InputStreamReader(
                 inputStream));
         this.name = name;

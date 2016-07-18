@@ -55,7 +55,7 @@ public class PowerShell {
     //Config values
     private int maxThreads = 3; 
     private int waitPause = 10;
-    private int maxWait = 10000;
+    private long maxWait = 10000;
 
     //Private constructor.
     private PowerShell() {
@@ -80,7 +80,7 @@ public class PowerShell {
         try {
             this.maxThreads = Integer.valueOf((config != null && config.get("maxThreads") != null) ? config.get("maxThreads") : PowerShellConfig.getConfig().getProperty("maxThreads"));
             this.waitPause = Integer.valueOf((config != null && config.get("waitPause") != null) ? config.get("waitPause") : PowerShellConfig.getConfig().getProperty("waitPause"));
-            this.maxWait = Integer.valueOf((config != null && config.get("maxWait") != null) ? config.get("maxWait") : PowerShellConfig.getConfig().getProperty("maxWait"));
+            this.maxWait = Long.valueOf((config != null && config.get("maxWait") != null) ? config.get("maxWait") : PowerShellConfig.getConfig().getProperty("maxWait"));
         } catch (NumberFormatException nfe) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Could not read configuration. Use default values.", nfe);
         }
