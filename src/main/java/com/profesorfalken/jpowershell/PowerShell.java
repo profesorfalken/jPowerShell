@@ -132,9 +132,9 @@ public class PowerShell {
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable commandProcessor = new PowerShellCommandProcessor("standard", 
+        Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", 
                 p.getInputStream(), this.maxWait, this.waitPause);
-        Callable commandProcessorError = new PowerShellCommandProcessor("error", 
+        Callable<String> commandProcessorError = new PowerShellCommandProcessor("error", 
                 p.getErrorStream(), this.maxWait, this.waitPause);
 
         String commandOutput = "";
@@ -181,7 +181,6 @@ public class PowerShell {
         if (!this.closed) {
             try {
                 Future<String> closeTask = threadpool.submit(new Callable<String>() {
-                    @Override
                     public String call() throws Exception {
                         commandWriter.println("exit");
                         p.waitFor();

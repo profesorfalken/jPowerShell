@@ -25,7 +25,9 @@ import java.io.IOException;
  */
 public class PowerShellNotAvailableException extends IOException{
 
-    PowerShellNotAvailableException() {
+	private static final long serialVersionUID = 8387251378765251753L;
+
+	PowerShellNotAvailableException() {
     }
 
     PowerShellNotAvailableException(String message) {

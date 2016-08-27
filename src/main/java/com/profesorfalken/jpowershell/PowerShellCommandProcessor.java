@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  *
  * @author Javier Garcia Alonso
  */
-class PowerShellCommandProcessor implements Callable {
+class PowerShellCommandProcessor implements Callable<String> {
 
     private static final String CRLF = "\r\n";
 
@@ -63,7 +63,6 @@ class PowerShellCommandProcessor implements Callable {
      * @return
      * @throws IOException
      */
-    @Override
     public String call() throws IOException, InterruptedException {
         StringBuilder powerShellOutput = new StringBuilder();
 
@@ -116,7 +115,7 @@ class PowerShellCommandProcessor implements Callable {
     }
 
     /**
-     * Closes the command processor, cancelling the current work if not finish
+     * Closes the command processor, canceling the current work if not finish
      */
     public void close() {
         this.closed = true;
