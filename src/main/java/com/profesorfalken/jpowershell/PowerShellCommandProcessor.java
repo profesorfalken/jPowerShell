@@ -39,9 +39,11 @@ class PowerShellCommandProcessor implements Callable<String> {
 
     private boolean closed = false;
     private boolean timeout = false;
-    
+
+    private boolean scriptMode = false;
+
     private final long maxWait;
-    private final int waitPause;    
+    private final int waitPause;
 
     /**
      * Constructor that takes the output and the input of the PowerShell session
@@ -49,12 +51,13 @@ class PowerShellCommandProcessor implements Callable<String> {
      * @param commandWriter the input to the PowerShell console
      * @param inputStream the stream needed to read the command output
      */
-    public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause) {
+    public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause, boolean scriptMode) {
         this.reader = new BufferedReader(new InputStreamReader(
                 inputStream));
         this.name = name;
         this.maxWait = maxWait;
         this.waitPause = waitPause;
+        this.scriptMode = scriptMode;
     }
 
     /**
@@ -73,6 +76,8 @@ class PowerShellCommandProcessor implements Callable<String> {
         } catch (IOException ioe) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
             return ioe.getMessage();
+        } catch (Exception e) {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", e);
         }
 
         return powerShellOutput.toString();
@@ -82,13 +87,25 @@ class PowerShellCommandProcessor implements Callable<String> {
     private void readData(StringBuilder powerShellOutput) throws IOException {
         String line;
         while (null != (line = this.reader.readLine())) {
-            powerShellOutput.append(line).append(CRLF);
-            try {
-                if (!continueReading() || this.closed) {
+            
+            //In the case of script mode it finish when the last line is readed
+            if (this.scriptMode) {
+                if (line.equals(PowerShell.END_SCRIPT_STRING)) {
                     break;
                 }
-            } catch (InterruptedException ex) {
-                Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+            powerShellOutput.append(line).append(CRLF);
+
+            //When not in script mode, it exits when the command is finished
+            if (!this.scriptMode) {
+                try {
+                    if (!continueReading() || this.closed) {
+                        break;
+                    }
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, "Error executing command and reading result", ex);
+                }
             }
         }
     }
@@ -129,7 +146,7 @@ class PowerShellCommandProcessor implements Callable<String> {
     public String getName() {
         return this.name;
     }
-    
+
     /**
      * Return if the execution finished with a timeout
      *
