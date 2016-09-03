@@ -89,6 +89,7 @@ The three variables that can be configured in jPowerShell are:
 
 *maxWait*: the maximum wait in ms for the command to execute. Default value is 10000
 
+
 #### Executing PowerShell Script ####
 
 In order to execute a PowerShell Script it is recommended to use the executeScript() method instead of executeCommand():
