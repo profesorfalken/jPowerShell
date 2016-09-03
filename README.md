@@ -88,3 +88,31 @@ The three variables that can be configured in jPowerShell are:
 *waitPause*: the pause in ms between each loop pooling for a response. Default value is 10
 
 *maxWait*: the maximum wait in ms for the command to execute. Default value is 10000
+
+#### Executing PowerShell Script ####
+
+In order to execute a PowerShell Script it is recommended to use the executeScript() method instead of executeCommand():
+
+```java
+   PowerShellResponse response = null;
+   try {
+       //Creates PowerShell session
+       PowerShell powerShell = PowerShell.openSession();
+       //Increase timeout to give enough time to the script to finish
+       Map<String, String> config = new HashMap<String, String>();
+       config.put("maxWait", "80000");
+       
+       //Execute script
+       response = powerShell.configuration(config).executeScript("./myPath/MyScript.ps1");
+       
+       //Print results if the script
+       System.out.println("Script output:" + response.getCommandOutput());
+   } catch(PowerShellNotAvailableException ex) {
+       //Handle error when PowerShell is not available in the system
+       //Maybe try in another way?
+   } finally {
+       //Always close PowerShell session to free resources.
+       if (powerShell != null)
+         powerShell.close();
+   }
+```
