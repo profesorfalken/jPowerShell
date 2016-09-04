@@ -210,15 +210,27 @@ public class PowerShell {
         }
         return response;
     }
+    
+    /**
+     * Executed the provided PowerShell script in PowerShell console and 
+     * gets result. 
+     *
+     * @param scriptPath the full paht of the script
+     * @return response with the output of the command
+     */
+    public PowerShellResponse executeScript(String scriptPath) {
+    	return executeScript(scriptPath, "");
+    }
 
     /**
      * Executed the provided PowerShell script in PowerShell console and 
      * gets result. 
      * 
-     * @param scriptPath the full paht of the script
+     * @param scriptPath the full path of the script
+     * @param params the parameters of the script
      * @return response with the output of the command
      */
-    public PowerShellResponse executeScript(String scriptPath) {
+    public PowerShellResponse executeScript(String scriptPath, String params) {
         BufferedReader reader = null;
         BufferedWriter writer = null;
         
@@ -261,7 +273,7 @@ public class PowerShell {
                 
         this.scriptMode = true;
 
-        return executeCommand(tmpFile.getAbsolutePath());
+        return executeCommand(tmpFile.getAbsolutePath() + " " + params);
     }
 
     /**
