@@ -149,7 +149,7 @@ public class PowerShell {
         Callable<String> commandProcessor = new PowerShellCommandProcessor("standard",
                 p.getInputStream(), this.maxWait, this.waitPause, this.scriptMode);
         Callable<String> commandProcessorError = new PowerShellCommandProcessor("error",
-                p.getErrorStream(), this.maxWait, this.waitPause, this.scriptMode);
+                p.getErrorStream(), this.maxWait, this.waitPause, false);
 
         String commandOutput = "";
         boolean isError = false;
