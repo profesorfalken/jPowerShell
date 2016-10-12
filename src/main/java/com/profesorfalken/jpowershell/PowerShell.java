@@ -62,6 +62,7 @@ public class PowerShell {
     private int maxThreads = 3;
     private int waitPause = 10;
     private long maxWait = 10000;
+    private boolean remoteMode = false;
     
     //Variables for script mode
     private boolean scriptMode = false;
@@ -95,6 +96,7 @@ public class PowerShell {
             this.maxThreads = Integer.valueOf((config != null && config.get("maxThreads") != null) ? config.get("maxThreads") : PowerShellConfig.getConfig().getProperty("maxThreads"));
             this.waitPause = Integer.valueOf((config != null && config.get("waitPause") != null) ? config.get("waitPause") : PowerShellConfig.getConfig().getProperty("waitPause"));
             this.maxWait = Long.valueOf((config != null && config.get("maxWait") != null) ? config.get("maxWait") : PowerShellConfig.getConfig().getProperty("maxWait"));
+            this.remoteMode = Boolean.valueOf((config != null && config.get("remoteMode") != null) ? config.get("remoteMode") : PowerShellConfig.getConfig().getProperty("remoteMode"));
         } catch (NumberFormatException nfe) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Could not read configuration. Use default values.", nfe);
         }
@@ -157,6 +159,10 @@ public class PowerShell {
 
         Future<String> result = threadpool.submit(commandProcessor);
         Future<String> resultError = threadpool.submit(commandProcessorError);
+        
+        if (this.remoteMode) {
+        	command  = completeRemoteCommand(command);
+        }
 
         //Launch command
         commandWriter.println(command);
@@ -324,5 +330,9 @@ public class PowerShell {
             Thread.sleep(this.waitPause);
             closingTime += this.waitPause;
         }
+    }
+    
+    private String completeRemoteCommand(String command) {
+    	return command + ";Write-Host \"\"";
     }
 }

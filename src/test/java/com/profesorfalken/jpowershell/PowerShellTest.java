@@ -365,6 +365,25 @@ public class PowerShellTest {
 
         }
     }
+    
+    //@Test
+    public void testRemote() throws Exception {
+        System.out.println("testRemote");
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = PowerShell.openSession();
+            Map<String, String> config = new HashMap<String, String>();
+            config.put("remoteMode", "true");            
+            PowerShellResponse response = powerShell
+            		.configuration(config)
+            		.executeCommand("Invoke-command -ComputerName leon {(Get-Service W32Time).WaitForStatus('Running','02:00:00')}");
+
+            System.out.println("Output:" + response.getCommandOutput());
+
+            Assert.assertFalse(response.isError());
+
+            powerShell.close();
+        }
+    }
 
     @Test
     public void testLongScript() throws Exception {
