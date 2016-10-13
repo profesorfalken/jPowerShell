@@ -8,18 +8,18 @@ Simple Java API to interact with PowerShell console
 
 ## Installation ##
 
-To install jPowerShell you can add the dependecy to your software project management tool: http://mvnrepository.com/artifact/com.profesorfalken/jPowerShell/1.6.2
+To install jPowerShell you can add the dependecy to your software project management tool: http://mvnrepository.com/artifact/com.profesorfalken/jPowerShell/1.7
 
 For example, for Maven you have just to add to your pom.xml: 
 
       <dependency>
 	        <groupId>com.profesorfalken</groupId>
 	        <artifactId>jPowerShell</artifactId>
-	        <version>1.6.2</version>
+	        <version>1.7</version>
         </dependency>
 
 Instead, you can direct download the JAR file and add it to your classpath. 
-https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/1.6.2/jPowerShell-1.6.2.jar
+https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/1.7/jPowerShell-1.7.jar
 
 ## Basic Usage ##
 
@@ -88,6 +88,8 @@ The three variables that can be configured in jPowerShell are:
 *waitPause*: the pause in ms between each loop pooling for a response. Default value is 10
 
 *maxWait*: the maximum wait in ms for the command to execute. Default value is 10000
+
+*remoteMode*: it should be true when we are executing a command in remote. Otherwise the execution will finish in timeout.
 
 
 #### Executing PowerShell Script ####
