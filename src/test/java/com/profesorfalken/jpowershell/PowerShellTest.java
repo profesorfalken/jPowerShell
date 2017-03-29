@@ -409,8 +409,10 @@ public class PowerShellTest {
             }
 
             Assert.assertNotNull("Response null!",response);
-            Assert.assertFalse("Is in error!", response.isError());
-            Assert.assertFalse("Is timeout!", response.isTimeout());
+            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+	            Assert.assertFalse("Is in error!", response.isError());
+	            Assert.assertFalse("Is timeout!", response.isTimeout());
+            }
             System.out.println(response.getCommandOutput());
         }
     }
