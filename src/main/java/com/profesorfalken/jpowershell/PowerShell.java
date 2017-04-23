@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -113,8 +114,15 @@ public class PowerShell {
                     "Cannot execute PowerShell.exe. Please make sure that it is installed in your system", ex);
         }
 
-        commandWriter
-                = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
+        try {
+			commandWriter
+			        = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream()), "UTF-8"), true);
+		} catch (UnsupportedEncodingException e) {			
+			 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Error setting writer encoding", e);
+			 //Set the writer with encoding by default
+			 commandWriter
+		        = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
+		}
 
         //Init thread pool
         this.threadpool = Executors.newFixedThreadPool(this.maxThreads);
