@@ -409,8 +409,10 @@ public class PowerShellTest {
             }
 
             Assert.assertNotNull("Response null!",response);
-            Assert.assertFalse("Is in error!", response.isError());
-            Assert.assertFalse("Is timeout!", response.isTimeout());
+            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+	            Assert.assertFalse("Is in error!", response.isError());
+	            Assert.assertFalse("Is timeout!", response.isTimeout());
+            }
             System.out.println(response.getCommandOutput());
         }
     }
@@ -422,7 +424,7 @@ public class PowerShellTest {
      */
     @Test
     public void testConfiguration() throws Exception {
-        System.out.println("testTimeout");
+        System.out.println("testConfiguration");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
             Map<String, String> config = new HashMap<String, String>();
