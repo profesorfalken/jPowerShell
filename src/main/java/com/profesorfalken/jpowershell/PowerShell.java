@@ -106,7 +106,9 @@ public class PowerShell {
 
     //Initializes PowerShell console in which we will enter the commands
     private PowerShell initalize() throws PowerShellNotAvailableException {
-        ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-NoExit", "-Command", "-");
+	String cp = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());	
+	ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "chcp", cp, ">>", "null", "&", "powershell.exe", "-NoExit", "-Command", "-");
+
         try {
             p = pb.start();
         } catch (IOException ex) {
