@@ -225,70 +225,133 @@ public class PowerShell {
         return response;
     }
     
-    /**
-     * Executed the provided PowerShell script in PowerShell console and 
-     * gets result. 
-     *
-     * @param scriptPath the full paht of the script
-     * @return response with the output of the command
-     */
-    public PowerShellResponse executeScript(String scriptPath) {
-    	return executeScript(scriptPath, "");
-    }
+    //Writes a temp powershell script file based on the srcReader
+    private File createWriteTempFile(BufferedReader srcReader) {
 
-    /**
-     * Executed the provided PowerShell script in PowerShell console and 
-     * gets result. 
-     * 
-     * @param scriptPath the full path of the script
-     * @param params the parameters of the script
-     * @return response with the output of the command
-     */
-    public PowerShellResponse executeScript(String scriptPath, String params) {
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-        
+        BufferedWriter tmpWriter = null;
         File tmpFile = null;
+
         try {
-            File scriptToExecute = new File(scriptPath);
-            if (!scriptToExecute.exists()) {
-                return new PowerShellResponse(true, "Wrong script path: " + scriptToExecute, false);
-            }
+
             tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1");
             if (tmpFile == null || !tmpFile.exists()) {
-                return new PowerShellResponse(true, "Cannot create temp script file", false);
+                return null;
             }
-            
-            reader = new BufferedReader(new FileReader(scriptToExecute));
-            writer = new BufferedWriter(new FileWriter(tmpFile));
+
+            tmpWriter = new BufferedWriter(new FileWriter(tmpFile));
             String line;
-            while ((line = reader.readLine()) != null) {
-                writer.write(line);
-                writer.newLine();
+            while (srcReader != null && (line = srcReader.readLine()) != null) {
+                tmpWriter.write(line);
+                tmpWriter.newLine();
             }
-            //Add end script line
-            writer.write("Write-Host \"" + END_SCRIPT_STRING + "\"");
-        } catch (FileNotFoundException fnfex) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell script", fnfex);
+
+            // Add end script line
+            tmpWriter.write("Write-Host \"" + END_SCRIPT_STRING + "\"");
         } catch (IOException ioex) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell script", ioex);
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                    "Unexpected error while writing temporary PowerShell script", ioex);
         } finally {
             try {
-                if (reader != null) {
-                    reader.close();
+                if (srcReader != null) {
+                    srcReader.close();
                 }
-                if (writer != null) {
-                    writer.close();
+                if (tmpWriter != null) {
+                    tmpWriter.close();
                 }
             } catch (IOException ex) {
-                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell script", ex);
+                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                        "Unexpected error when processing temporary PowerShell script", ex);
             }
         }
-                
-        this.scriptMode = true;
 
-        return executeCommand(tmpFile.getAbsolutePath() + " " + params);
-    }
+        return tmpFile;
+	}
+
+	/**
+	 * Executed the provided PowerShell script in PowerShell console and gets
+	 * result.
+	 *
+	 * @param scriptPath
+	 *            the full paht of the script
+	 * @return response with the output of the command
+	 */
+	public PowerShellResponse executeScript(String scriptPath) {
+		return executeScript(scriptPath, "");
+	}
+
+	/**
+	 * Executed the provided PowerShell script in PowerShell console and gets
+	 * result.
+	 * 
+	 * @param scriptPath
+	 *            the full path of the script
+	 * @param params
+	 *            the parameters of the script
+	 * @return response with the output of the command
+	 */
+	public PowerShellResponse executeScript(String scriptPath, String params) {
+		BufferedReader srcReader = null;
+
+		File scriptToExecute = new File(scriptPath);
+		if (!scriptToExecute.exists()) {
+			return new PowerShellResponse(true, "Wrong script path: " + scriptToExecute, false);
+		}
+
+		try {
+			srcReader = new BufferedReader(new FileReader(scriptToExecute));
+		} catch (FileNotFoundException fnfex) {
+			 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell script: file not found", fnfex);
+		}
+				
+		File tmpFile = createWriteTempFile(srcReader);
+		if (tmpFile != null) {
+			this.scriptMode = true;
+
+			return executeCommand(tmpFile.getAbsolutePath() + " " + params);
+		} else {
+			return new PowerShellResponse(true, "Cannot create temp script file", false);
+		}
+
+	}
+
+	/**
+	 * Executed the provided PowerShell script in PowerShell console and gets
+	 * result.
+	 *
+	 * @param srcReader
+	 *            the script as BufferedReader (when loading File from jar)
+	 * @return response with the output of the command
+	 */
+	public PowerShellResponse executeScript(BufferedReader srcReader) {
+		return executeScript(srcReader, "");
+	}
+
+	/**
+	 * Executed the provided PowerShell script in PowerShell console and gets
+	 * result.
+	 * 
+	 * @param srcReader
+	 *            the script as BufferedReader (when loading File from jar)
+	 * @param params
+	 *            the parameters of the script
+	 * @return response with the output of the command
+	 */
+	public PowerShellResponse executeScript(BufferedReader srcReader, String params) {
+
+		if(srcReader != null) {
+			File tmpFile = createWriteTempFile(srcReader);
+			if (tmpFile != null) {
+				this.scriptMode = true;
+
+				return executeCommand(tmpFile.getAbsolutePath() + " " + params);
+			} else {
+				return new PowerShellResponse(true, "Cannot create temp script file!", false);
+			}
+		} else {
+			return new PowerShellResponse(true, "Script reader is invalid!", false);
+		}	
+		
+	}
 
     /**
      * Closes all the resources used to maintain the PowerShell context
