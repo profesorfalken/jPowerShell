@@ -130,7 +130,7 @@ In order to execute a PowerShell Script that is bundled inside a jar you must us
 
     //Read the resource
     BufferedReader srcReader = new BufferedReader(
-                    new InputStreamReader(getClass().getResourceAsStream(commmandOrScript)));
+                    new InputStreamReader(getClass().getResourceAsStream(script)));
 
     if (scriptParams != null && !scriptParams.equals("")) {
         response = powerShell.executeScript(srcReader, scriptParams);
