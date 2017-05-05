@@ -1,9 +1,29 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.profesorfalken.jpowershell;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * Enum that contains possible CodePage values needed to correctly set the encoding in a windows console session<br>
+ * https://msdn.microsoft.com/de-de/library/windows/desktop/dd317756(v=vs.85).aspx
+ * 
+ * @author Harinus
+ *
+ */
 public class PowerShellCodepage {
 
 	static Map<String, String> codePages = new HashMap<String, String>();
@@ -162,17 +182,32 @@ public class PowerShellCodepage {
 		codePages.put("65001", "utf-8");
 	}
 	
+	/**
+	 * Get the encoding value from CodePage
+	 * 
+	 * @param cpIdentifier encoding value 
+	 * @return
+	 */
 	public static String getCodePageNameByIdetifier(String cpIdentifier) {
 		return codePages.get(cpIdentifier);
 	}
 
+	/**
+	 * Get the CodePage code from encoding value
+	 * 
+	 * @param cpName
+	 * @return
+	 */
 	public static String getIdentifierByCodePageName(String cpName) {
-		for (Entry<String, String> codePage : codePages.entrySet()) {
-            if (codePage.getValue().equals(cpName)) {
-                return codePage.getKey();
-            }
-        }
-		return "";
+		if (cpName != null) {
+			for (Entry<String, String> codePage : codePages.entrySet()) {
+	            if (codePage.getValue().toLowerCase().equals(cpName.toLowerCase())) {
+	                return codePage.getKey();
+	            }
+	        }
+		}
+		//Default UTF-8
+		return "65001";
 	}
 	
 }

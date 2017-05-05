@@ -107,8 +107,8 @@ public class PowerShell {
 
     //Initializes PowerShell console in which we will enter the commands
     private PowerShell initalize() throws PowerShellNotAvailableException {
-	String cp = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());	
-	ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "chcp", cp, ">>", "null", "&", "powershell.exe", "-NoExit", "-Command", "-");
+	String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());	
+	ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">>", "null", "&", "powershell.exe", "-NoExit", "-Command", "-");
 
         try {
             p = pb.start();
@@ -116,16 +116,8 @@ public class PowerShell {
             throw new PowerShellNotAvailableException(
                     "Cannot execute PowerShell.exe. Please make sure that it is installed in your system", ex);
         }
-
-        try {
-			commandWriter
-			        = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream()), "UTF-8"), true);
-		} catch (UnsupportedEncodingException e) {			
-			 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Error setting writer encoding", e);
-			 //Set the writer with encoding by default
-			 commandWriter
-		        = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
-		}
+        
+        commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);        
 
         //Init thread pool
         this.threadpool = Executors.newFixedThreadPool(this.maxThreads);
