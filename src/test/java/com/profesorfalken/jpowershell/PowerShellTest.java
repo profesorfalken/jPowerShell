@@ -1,10 +1,16 @@
 package com.profesorfalken.jpowershell;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -344,7 +350,7 @@ public class PowerShellTest {
     }
 
     /**
-     * Test of long command
+     * Test of timeout
      *
      * @throws java.lang.Exception
      */
@@ -384,6 +390,68 @@ public class PowerShellTest {
             powerShell.close();
         }
     }
+    
+    @Test
+    public void testScript() throws Exception {
+        System.out.println("testScript");
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = PowerShell.openSession();
+            Map<String, String> config = new HashMap<String, String>();
+            PowerShellResponse response = null;
+            
+            StringBuilder scriptContent = new StringBuilder();
+            scriptContent.append("Write-Host \"First message\"").append(CRLF);
+            
+            try {
+                response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()));
+            } finally {
+                powerShell.close();
+            }
+
+            Assert.assertNotNull("Response null!",response);
+            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+	            Assert.assertFalse("Is in error!", response.isError());
+	            Assert.assertFalse("Is timeout!", response.isTimeout());
+            }
+            System.out.println(response.getCommandOutput());
+        }
+    }
+    
+    @Test
+    public void testScriptByBufferedReader() throws Exception {
+        System.out.println("testScriptByBufferedReader");
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = PowerShell.openSession();
+            Map<String, String> config = new HashMap<String, String>();
+            PowerShellResponse response = null;
+            
+            StringBuilder scriptContent = new StringBuilder();
+            scriptContent.append("Write-Host \"First message\"").append(CRLF);
+            
+            BufferedReader srcReader =  null;
+            try {
+    			srcReader = new BufferedReader(new FileReader(generateScript(scriptContent.toString())));
+    		} catch (FileNotFoundException fnfex) {
+    			 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell script: file not found", fnfex);
+    		}
+            
+            Assert.assertNotNull("Cannot create reader from temp file", srcReader);
+            
+            try {
+                response = powerShell.configuration(config).executeScript(srcReader);
+            } finally {
+                powerShell.close();
+            }
+
+            Assert.assertNotNull("Response null!",response);
+            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+	            Assert.assertFalse("Is in error!", response.isError());
+	            Assert.assertFalse("Is timeout!", response.isTimeout());
+            }
+            System.out.println(response.getCommandOutput());
+        }
+    }
+
 
     @Test
     public void testLongScript() throws Exception {
@@ -418,7 +486,7 @@ public class PowerShellTest {
     }
 
     /**
-     * Test of long command
+     * Test of configuration
      *
      * @throws java.lang.Exception
      */
