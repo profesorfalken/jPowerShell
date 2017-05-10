@@ -119,3 +119,22 @@ In order to execute a PowerShell Script it is recommended to use the executeScri
          powerShell.close();
    }
 ```
+#### Executing PowerShell Scripts packaged inside jar ####
+
+In order to execute a PowerShell Script that is bundled inside a jar you must use a BufferedReader to load the resource:
+
+```java
+    PowerShell powerShell = PowerShell.openSession();
+    String script = "resourcePath/MyScript.ps1"
+    String scriptParams = "-Parameter value"
+
+    //Read the resource
+    BufferedReader srcReader = new BufferedReader(
+                    new InputStreamReader(getClass().getResourceAsStream(script)));
+
+    if (scriptParams != null && !scriptParams.equals("")) {
+        response = powerShell.executeScript(srcReader, scriptParams);
+    } else {
+        response =  powerShell.executeScript(srcReader);
+    }
+```
