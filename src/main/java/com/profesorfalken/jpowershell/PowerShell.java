@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Javier Garcia Alonso.
+ * Copyright 2016-2017 Javier Garcia Alonso.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
@@ -290,23 +289,15 @@ public class PowerShell {
 		File scriptToExecute = new File(scriptPath);
 		if (!scriptToExecute.exists()) {
 			return new PowerShellResponse(true, "Wrong script path: " + scriptToExecute, false);
-		}
+		}		
 
 		try {
 			srcReader = new BufferedReader(new FileReader(scriptToExecute));
 		} catch (FileNotFoundException fnfex) {
 			 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell script: file not found", fnfex);
 		}
-				
-		File tmpFile = createWriteTempFile(srcReader);
-		if (tmpFile != null) {
-			this.scriptMode = true;
-
-			return executeCommand(tmpFile.getAbsolutePath() + " " + params);
-		} else {
-			return new PowerShellResponse(true, "Cannot create temp script file", false);
-		}
-
+		
+		return executeScript(srcReader, params);
 	}
 
 	/**
@@ -337,13 +328,13 @@ public class PowerShell {
 			File tmpFile = createWriteTempFile(srcReader);
 			if (tmpFile != null) {
 				this.scriptMode = true;
-
 				return executeCommand(tmpFile.getAbsolutePath() + " " + params);
-			} else {
+			} else {				
 				return new PowerShellResponse(true, "Cannot create temp script file!", false);
 			}
 		} else {
-			return new PowerShellResponse(true, "Script reader is invalid!", false);
+			Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Script buffered reader is null!");
+			return new PowerShellResponse(true, "Script buffered reader is null!", false);
 		}	
 		
 	}
