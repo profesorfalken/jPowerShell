@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Javier Garcia Alonso.
+ * Copyright 2016-2017 Javier Garcia Alonso.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Instant;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,19 +46,27 @@ class PowerShellCommandProcessor implements Callable<String> {
     private final long maxWait;
     private final int waitPause;
 
+    private long commandStart;
+    private boolean ready = false;
+
     /**
      * Constructor that takes the output and the input of the PowerShell session
      *
      * @param commandWriter the input to the PowerShell console
      * @param inputStream the stream needed to read the command output
      */
-    public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause, boolean scriptMode) {
+    public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause, boolean scriptMode, long commandStart) {
         this.reader = new BufferedReader(new InputStreamReader(
                 inputStream));
         this.name = name;
         this.maxWait = maxWait;
         this.waitPause = waitPause;
         this.scriptMode = scriptMode;
+        this.commandStart = commandStart;
+    }
+    
+    public boolean isReady() {
+    	return this.ready;
     }
 
     /**
@@ -112,17 +121,23 @@ class PowerShellCommandProcessor implements Callable<String> {
 
     //Checks when we can start reading the output. Timeout if it takes too long in order to avoid hangs
     private boolean startReading() throws IOException, InterruptedException {
-        int timeWaiting = 0;
+        long commandStart = this.commandStart;
+        long elapsedTime = Instant.now().toEpochMilli() - commandStart; 
 
         while (!this.reader.ready()) {
             Thread.sleep(this.waitPause);
-            timeWaiting += this.waitPause;
-            if ((timeWaiting > this.maxWait) || this.closed) {
-                this.timeout = timeWaiting > this.maxWait;
+            elapsedTime = Instant.now().toEpochMilli() - commandStart; 
+            
+            if ((elapsedTime > maxWait)) {
+            	this.timeout = true;
+            	return false;
+            } else if (this.closed) {
                 return false;
-            }
+            } 
         }
-        return true;
+        this.ready = true;
+        return true;        
+        
     }
 
     //Checks when we the reader can continue to read.
