@@ -25,7 +25,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -34,8 +36,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.WinNT;
 
 /**
  * Allows to open a session into PowerShell console and launch different
@@ -58,6 +65,7 @@ public class PowerShell {
     //Threaded session variables
     private boolean closed = false;
     private ExecutorService threadpool;
+    private boolean blocked = false;
 
     //Config values
     private int maxThreads = 3;
@@ -150,10 +158,14 @@ public class PowerShell {
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
+    	
+        Instant instant = Instant.now();
+        long timeStampMillis = instant.toEpochMilli();
+    	
         Callable<String> commandProcessor = new PowerShellCommandProcessor("standard",
-                p.getInputStream(), this.maxWait, this.waitPause, this.scriptMode);
+                p.getInputStream(), this.maxWait, this.waitPause, this.scriptMode, timeStampMillis);
         Callable<String> commandProcessorError = new PowerShellCommandProcessor("error",
-                p.getErrorStream(), this.maxWait, this.waitPause, false);
+                p.getErrorStream(), this.maxWait, this.waitPause, false, timeStampMillis);
 
         String commandOutput = "";
         boolean isError = false;
@@ -169,25 +181,47 @@ public class PowerShell {
         //Launch command
         commandWriter.println(command);
 
+        long elapsedTime = 0;
+        
         try {
-            while (!result.isDone() && !resultError.isDone()) {
+        	while (!result.isDone() && !resultError.isDone() && (elapsedTime < maxWait)) {
                 Thread.sleep(this.waitPause);
+                elapsedTime = Instant.now().toEpochMilli() - timeStampMillis; 
             }
-            if (result.isDone()) {
-                if (((PowerShellCommandProcessor) commandProcessor).isTimeout()) {
-                    timeout = true;
-                } else {
-                    commandOutput = result.get();
-                }
-            } else {
+        	
+        	if (elapsedTime >= maxWait) {
+           		//Command timed out but may have some output
+                timeout = true;
+                commandOutput = result.get(waitPause, TimeUnit.MILLISECONDS);
+        	}
+        	
+        	if (result.isDone()) {
+            	//Command finished successfully
+        		
+        		do {
+        			//stderr might need another wait cycle to finish, as it finishes after the stdout.
+            		//If it is ready then, we can wait for the output to be read and the future to be done.
+        			Thread.sleep(this.waitPause);
+				} while (((PowerShellCommandProcessor) commandProcessorError).isReady() && !resultError.isDone() && !timeout);
+                commandOutput = result.get();                
+        	}
+        	
+        	if (resultError.isDone() && !timeout) {
+        		//Command failed
                 isError = true;
                 commandOutput = resultError.get();
-            }
+        	}
+        	
         } catch (InterruptedException ex) {
+        	isError = true;
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
         } catch (ExecutionException ex) {
+        	isError = true;
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when processing PowerShell command", ex);
-        } finally {
+        } catch (TimeoutException e) {
+        	Logger.getLogger(PowerShell.class.getName()).log(Level.WARNING, "Failed to read data due to timeout, close will be forced!");
+        	this.blocked = true;
+		} finally {
             //issue #2. Close and cancel processors/threads - Thanks to r4lly for helping me here
             ((PowerShellCommandProcessor) commandProcessor).close();
             ((PowerShellCommandProcessor) commandProcessorError).close();
@@ -343,6 +377,39 @@ public class PowerShell {
      * Closes all the resources used to maintain the PowerShell context
      */
     public void close() {
+    	
+        if (blocked) {
+        	Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Shell is blocked, closing of PowerShell will be forced!");
+        	
+        	int pid = -1;
+        	
+            Field f;
+			try {
+				f = p.getClass().getDeclaredField("handle");
+				f.setAccessible(true); 
+				long handLong = f.getLong(p);
+
+                Kernel32 kernel = Kernel32.INSTANCE;
+                WinNT.HANDLE handle = new WinNT.HANDLE();
+                handle.setPointer(Pointer.createConstant(handLong));
+                pid = kernel.GetProcessId(handle);
+                
+			} catch (Exception e1) {
+				Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error while getting process handle", e1);
+			}
+
+			Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Killing process with PID: " + pid);
+						
+        	try {
+				Runtime.getRuntime().exec("taskkill.exe /f /PID " + pid + " /T" );
+				this.closed = true;
+			} catch (IOException e) {
+				Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error while killing powershell process", e);
+			}
+        	
+        
+        }
+        
         if (!this.closed) {
             try {
                 Future<String> closeTask = threadpool.submit(new Callable<String>() {
@@ -363,6 +430,7 @@ public class PowerShell {
                     Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when when closing streams", ex);
                 }
                 commandWriter.close();
+      
                 if (this.threadpool != null) {
                     try {
                         this.threadpool.shutdownNow();
@@ -379,6 +447,7 @@ public class PowerShell {
 
     private void waitUntilClose(Future<String> task) throws InterruptedException {
         int closingTime = 0;
+
         while (!task.isDone()) {
             if (closingTime > maxWait) {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error when closing PowerShell: TIMEOUT!");
