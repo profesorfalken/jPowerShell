@@ -394,7 +394,7 @@ public class PowerShell {
                 handle.setPointer(Pointer.createConstant(handLong));
                 pid = kernel.GetProcessId(handle);
                 
-			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
+			} catch (Exception e1) {
 				Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error while getting process handle", e1);
 			}
 
