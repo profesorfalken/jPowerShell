@@ -49,13 +49,14 @@ public class PowerShellTest {
 	@Test
 	public void testSimpleListDir() throws Exception {
 		System.out.println("start testListDir");
+		if (OSDetector.isWindows()) {
+			PowerShellResponse response = PowerShell.executeSingleCommand("dir");
 
-		PowerShellResponse response = PowerShell.executeSingleCommand("dir");
+			System.out.println("List Directory:" + response.getCommandOutput());
 
-		System.out.println("List Directory:" + response.getCommandOutput());
-
-		Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
-		System.out.println("end testListDir");
+			Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
+			System.out.println("end testListDir");
+		}
 	}
 
 	/**
@@ -188,30 +189,32 @@ public class PowerShellTest {
 	@Test
 	public void testExample() throws Exception {
 		System.out.println("testExample");
-		PowerShell powerShell = null;
-		try {
-			// Creates PowerShell session (we can execute several commands in
-			// the same session)
-			powerShell = PowerShell.openSession();
+		if (OSDetector.isWindows()) {
+			PowerShell powerShell = null;
+			try {
+				// Creates PowerShell session (we can execute several commands in
+				// the same session)
+				powerShell = PowerShell.openSession();
 
-			// Execute a command in PowerShell session
-			PowerShellResponse response = powerShell.executeCommand("Get-Process");
+				// Execute a command in PowerShell session
+				PowerShellResponse response = powerShell.executeCommand("Get-Process");
 
-			// Print results
-			System.out.println("List Processes:" + response.getCommandOutput());
+				// Print results
+				System.out.println("List Processes:" + response.getCommandOutput());
 
-			// Execute another command in the same PowerShell session
-			response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+				// Execute another command in the same PowerShell session
+				response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
 
-			// Print results
-			System.out.println("BIOS information:" + response.getCommandOutput());
-		} catch (PowerShellNotAvailableException ex) {
-			// Handle error when PowerShell is not available in the system
-			// Maybe try in another way?
-		} finally {
-			// Always close PowerShell session to free resources.
-			if (powerShell != null) {
-				powerShell.close();
+				// Print results
+				System.out.println("BIOS information:" + response.getCommandOutput());
+			} catch (PowerShellNotAvailableException ex) {
+				// Handle error when PowerShell is not available in the system
+				// Maybe try in another way?
+			} finally {
+				// Always close PowerShell session to free resources.
+				if (powerShell != null) {
+					powerShell.close();
+				}
 			}
 		}
 	}
@@ -224,57 +227,59 @@ public class PowerShellTest {
 	@Test
 	public void testComplexLoop() throws Exception {
 		System.out.println("testExample");
-		PowerShell powerShell = null;
-		try {
-			powerShell = PowerShell.openSession();
+		if (OSDetector.isWindows()) {
+			PowerShell powerShell = null;
+			try {
+				powerShell = PowerShell.openSession();
 
-			for (int i = 0; i < 10; i++) {
+				for (int i = 0; i < 10; i++) {
+					PowerShellResponse response = powerShell.executeCommand("Get-Process");
+
+					System.out.println("List Processes:" + response.getCommandOutput());
+
+					response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+
+					System.out.println("BIOS information:" + response.getCommandOutput());
+
+					response = powerShell.executeCommand("sfdsfdsf");
+
+					System.out.println("Error:" + response.getCommandOutput());
+
+					response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+
+					System.out.println("BIOS information:" + response.getCommandOutput());
+				}
+			} catch (PowerShellNotAvailableException ex) {
+			} finally {
+				if (powerShell != null) {
+					powerShell.close();
+				}
+			}
+
+			try {
+				// Creates PowerShell session (we can execute several commands in
+				// the same session)
+				powerShell = PowerShell.openSession();
+
+				// Execute a command in PowerShell session
 				PowerShellResponse response = powerShell.executeCommand("Get-Process");
 
+				// Print results
 				System.out.println("List Processes:" + response.getCommandOutput());
 
+				// Execute another command in the same PowerShell session
 				response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
 
+				// Print results
 				System.out.println("BIOS information:" + response.getCommandOutput());
-
-				response = powerShell.executeCommand("sfdsfdsf");
-
-				System.out.println("Error:" + response.getCommandOutput());
-
-				response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
-
-				System.out.println("BIOS information:" + response.getCommandOutput());
-			}
-		} catch (PowerShellNotAvailableException ex) {
-		} finally {
-			if (powerShell != null) {
-				powerShell.close();
-			}
-		}
-
-		try {
-			// Creates PowerShell session (we can execute several commands in
-			// the same session)
-			powerShell = PowerShell.openSession();
-
-			// Execute a command in PowerShell session
-			PowerShellResponse response = powerShell.executeCommand("Get-Process");
-
-			// Print results
-			System.out.println("List Processes:" + response.getCommandOutput());
-
-			// Execute another command in the same PowerShell session
-			response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
-
-			// Print results
-			System.out.println("BIOS information:" + response.getCommandOutput());
-		} catch (PowerShellNotAvailableException ex) {
-			// Handle error when PowerShell is not available in the system
-			// Maybe try in another way?
-		} finally {
-			// Always close PowerShell session to free resources.
-			if (powerShell != null) {
-				powerShell.close();
+			} catch (PowerShellNotAvailableException ex) {
+				// Handle error when PowerShell is not available in the system
+				// Maybe try in another way?
+			} finally {
+				// Always close PowerShell session to free resources.
+				if (powerShell != null) {
+					powerShell.close();
+				}
 			}
 		}
 	}
@@ -468,12 +473,12 @@ public class PowerShellTest {
 			StringBuilder scriptContent = new StringBuilder();
 			scriptContent.append("Write-Host \"First message\"").append(CRLF);
 			scriptContent.append("$output = \"c:\\10meg.test\"").append(CRLF);
-			scriptContent
-					.append("(New-Object System.Net.WebClient).DownloadFile(\"http://ipv4.download.thinkbroadband.com/10MB.zip\",$output)")
+			scriptContent.append(
+					"(New-Object System.Net.WebClient).DownloadFile(\"http://ipv4.download.thinkbroadband.com/10MB.zip\",$output)")
 					.append(CRLF);
 			scriptContent.append("Write-Host \"Second message\"").append(CRLF);
-			scriptContent
-					.append("(New-Object System.Net.WebClient).DownloadFile(\"http://ipv4.download.thinkbroadband.com/10MB.zip\",$output)")
+			scriptContent.append(
+					"(New-Object System.Net.WebClient).DownloadFile(\"http://ipv4.download.thinkbroadband.com/10MB.zip\",$output)")
 					.append(CRLF);
 			scriptContent.append("Write-Host \"Finish!\"").append(CRLF);
 
