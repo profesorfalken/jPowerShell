@@ -31,14 +31,16 @@ public class PowerShellTest {
 	@Test
 	public void testListDir() throws Exception {
 		System.out.println("testListDir");
-		PowerShell powerShell = PowerShell.openSession();
-		PowerShellResponse response = powerShell.executeCommand("dir");
+		if (OSDetector.isWindows()) {
+			PowerShell powerShell = PowerShell.openSession();
+			PowerShellResponse response = powerShell.executeCommand("dir");
 
-		System.out.println("List Directory:" + response.getCommandOutput());
+			System.out.println("List Directory:" + response.getCommandOutput());
 
-		Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
+			Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
 
-		powerShell.close();
+			powerShell.close();
+		}
 	}
 
 	/**
