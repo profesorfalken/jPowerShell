@@ -121,11 +121,15 @@ public class PowerShell {
 			pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">>", "null", "&", "powershell.exe",
 					"-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
 		} else {
-			pb = new ProcessBuilder("/bin/bash", "-c", "powershell", "-nologo",  "-noexit", "-Command", "-");
+			pb = new ProcessBuilder("/bin/bash", "-c", "powershell -nologo -noexit -Command -");
 		}
 
 		try {
 			p = pb.start();
+			if (!p.isAlive()) {
+				throw new PowerShellNotAvailableException(
+						"Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
+			}
 		} catch (IOException ex) {
 			throw new PowerShellNotAvailableException(
 					"Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
