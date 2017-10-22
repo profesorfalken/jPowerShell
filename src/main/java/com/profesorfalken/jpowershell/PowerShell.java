@@ -118,10 +118,10 @@ public class PowerShell {
 		ProcessBuilder pb = null;
 
 		if (OSDetector.isWindows()) {
-			pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">>", "null", "&", "powershell.exe",
+			pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", "powershell.exe",
 					"-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
 		} else {
-			pb = new ProcessBuilder("/bin/bash", "-c", "powershell -nologo -noexit -Command -");
+			pb = new ProcessBuilder("powershell -nologo -noexit -Command -");
 		}
 
 		try {
