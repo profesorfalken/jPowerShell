@@ -186,7 +186,7 @@ class PowerShellCodepage {
 	 * Get the encoding value from CodePage
 	 * 
 	 * @param cpIdentifier encoding value 
-	 * @return
+	 * @return String The codepage name
 	 */
 	public static String getCodePageNameByIdetifier(String cpIdentifier) {
 		return codePages.get(cpIdentifier);
@@ -195,8 +195,8 @@ class PowerShellCodepage {
 	/**
 	 * Get the CodePage code from encoding value
 	 * 
-	 * @param cpName
-	 * @return
+	 * @param cpName the codepage name
+	 * @return String the identifier
 	 */
 	public static String getIdentifierByCodePageName(String cpName) {
 		if (cpName != null) {

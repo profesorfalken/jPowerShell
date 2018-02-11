@@ -48,8 +48,11 @@ class PowerShellCommandProcessor implements Callable<String> {
     /**
      * Constructor that takes the output and the input of the PowerShell session
      *
-     * @param commandWriter the input to the PowerShell console
+     * @param name the name of the CommandProcessor
      * @param inputStream the stream needed to read the command output
+     * @param maxWait long the max wait time in milliseconds
+     * @param waitPause long the wait pause in milliseconds
+     * @param scriptMode boolean indicates if the command executes a script
      */
     public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause, boolean scriptMode) {
         this.reader = new BufferedReader(new InputStreamReader(
@@ -63,8 +66,8 @@ class PowerShellCommandProcessor implements Callable<String> {
     /**
      * Calls the command and returns its output
      *
-     * @return
-     * @throws IOException
+     * @return String output of call
+     * @throws IOException error when reading data
      */
     public String call() throws IOException, InterruptedException {
         StringBuilder powerShellOutput = new StringBuilder();
