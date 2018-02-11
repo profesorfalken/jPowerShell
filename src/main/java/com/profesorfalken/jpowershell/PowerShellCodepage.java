@@ -24,9 +24,9 @@ import java.util.Map.Entry;
  * @author Harinus
  *
  */
-public class PowerShellCodepage {
+class PowerShellCodepage {
 
-	static Map<String, String> codePages = new HashMap<String, String>();
+	private static final Map<String, String> codePages = new HashMap<String, String>();
 	static {
 		codePages.put("37", "IBM037");
 		codePages.put("437", "IBM437");

@@ -308,7 +308,7 @@ public class PowerShell {
 	 *            the parameters of the script
 	 * @return response with the output of the command
 	 */
-	public PowerShellResponse executeScript(String scriptPath, String params) {
+	private PowerShellResponse executeScript(String scriptPath, String params) {
 		BufferedReader srcReader = null;
 
 		File scriptToExecute = new File(scriptPath);
@@ -348,7 +348,7 @@ public class PowerShell {
 	 *            the parameters of the script
 	 * @return response with the output of the command
 	 */
-	public PowerShellResponse executeScript(BufferedReader srcReader, String params) {
+	private PowerShellResponse executeScript(BufferedReader srcReader, String params) {
 
 		if (srcReader != null) {
 			File tmpFile = createWriteTempFile(srcReader);
