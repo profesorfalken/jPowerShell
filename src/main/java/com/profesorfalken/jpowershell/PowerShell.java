@@ -368,13 +368,11 @@ public class PowerShell {
 	public void close() {
 		if (!this.closed) {
 			try {
-				Future<String> closeTask = threadpool.submit(new Callable<String>() {
-					public String call() throws Exception {
-						commandWriter.println("exit");
-						p.waitFor();
-						return "OK";
-					}
-				});
+				Future<String> closeTask = threadpool.submit(() -> {
+                    commandWriter.println("exit");
+                    p.waitFor();
+                    return "OK";
+                });
 				waitUntilClose(closeTask);
 			} catch (InterruptedException ex) {
 				Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
