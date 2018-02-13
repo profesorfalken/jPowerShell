@@ -388,7 +388,7 @@ public class PowerShellTest {
 		System.out.println("testRemote");
 		if (OSDetector.isWindows()) {
 			PowerShell powerShell = PowerShell.openSession();
-			Map<String, String> config = new HashMap<String, String>();
+			Map<String, String> config = new HashMap<>();
 			config.put("remoteMode", "true");
 			PowerShellResponse response = powerShell.configuration(config).executeCommand(
 					"Invoke-command -ComputerName leon {(Get-Service W32Time).WaitForStatus('Running','02:00:00')}");
@@ -406,7 +406,7 @@ public class PowerShellTest {
 		System.out.println("testScript");
 		if (OSDetector.isWindows()) {
 			PowerShell powerShell = PowerShell.openSession();
-			Map<String, String> config = new HashMap<String, String>();
+			Map<String, String> config = new HashMap<>();
 			PowerShellResponse response = null;
 
 			StringBuilder scriptContent = new StringBuilder();
@@ -432,7 +432,7 @@ public class PowerShellTest {
 		System.out.println("testScriptByBufferedReader");
 		if (OSDetector.isWindows()) {
 			PowerShell powerShell = PowerShell.openSession();
-			Map<String, String> config = new HashMap<String, String>();
+			Map<String, String> config = new HashMap<>();
 			PowerShellResponse response = null;
 
 			StringBuilder scriptContent = new StringBuilder();
@@ -468,7 +468,7 @@ public class PowerShellTest {
 		System.out.println("testLongScript");
 		if (OSDetector.isWindows()) {
 			PowerShell powerShell = PowerShell.openSession();
-			Map<String, String> config = new HashMap<String, String>();
+			Map<String, String> config = new HashMap<>();
 			config.put("maxWait", "80000");
 			PowerShellResponse response = null;
 
@@ -509,7 +509,7 @@ public class PowerShellTest {
 		System.out.println("testConfiguration");
 		if (OSDetector.isWindows()) {
 			PowerShell powerShell = PowerShell.openSession();
-			Map<String, String> config = new HashMap<String, String>();
+			Map<String, String> config = new HashMap<>();
 			config.put("maxWait", "1000");
 			PowerShellResponse response = null;
 			try {

@@ -204,10 +204,7 @@ public class PowerShell {
 				isError = true;
 				commandOutput = resultError.get();
 			}
-		} catch (InterruptedException ex) {
-			Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
-					"Unexpected error when processing PowerShell command", ex);
-		} catch (ExecutionException ex) {
+		} catch (InterruptedException | ExecutionException ex) {
 			Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
 					"Unexpected error when processing PowerShell command", ex);
 		} finally {
