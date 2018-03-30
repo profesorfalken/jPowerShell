@@ -127,7 +127,7 @@ public class PowerShell {
 					"-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
 		} else {
 			String powerShellExecutable = customPowerShellExecutablePath == null ? DEFAULT_LINUX_EXECUTABLE : customPowerShellExecutablePath;
-			pb = new ProcessBuilder(String.format("%s -nologo -noexit -Command -"), powerShellExecutable);
+			pb = new ProcessBuilder(String.format("%s -nologo -noexit -Command -", powerShellExecutable));
 		}
 
 		try {
