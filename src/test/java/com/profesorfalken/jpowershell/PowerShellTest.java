@@ -222,6 +222,30 @@ public class PowerShellTest {
 	}
 
 	/**
+	 * Test other executable from default one
+	 *
+	 * @throws java.lang.Exception
+	 */
+	@Test
+	public void testOtherExecutablePath() throws Exception {
+		PowerShell powerShell = null;
+		try {
+			powerShell = PowerShell.openSession("powerShell2.exe");
+
+			PowerShellResponse response = powerShell.executeCommand("Get-Process");
+
+			Assert.assertTrue(response.isError());
+			Assert.assertTrue(response.getCommandOutput().contains("powerShell2.exe"));
+		} catch (PowerShellNotAvailableException ex) {
+		} finally {
+			// Always close PowerShell session to free resources.
+			if (powerShell != null) {
+				powerShell.close();
+			}
+		}
+	}
+
+	/**
 	 * Test comples loop example.
 	 *
 	 * @throws java.lang.Exception
