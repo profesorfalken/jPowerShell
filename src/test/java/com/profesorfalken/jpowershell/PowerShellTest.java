@@ -229,17 +229,19 @@ public class PowerShellTest {
 	@Test
 	public void testOtherExecutablePath() throws Exception {
 		PowerShell powerShell = null;
-		try {
-			powerShell = PowerShell.openSession("powerShell2.exe");
+		if (OSDetector.isWindows()) {
+			try {
+				powerShell = PowerShell.openSession("powerShell2.exe");
 
-			PowerShellResponse response = powerShell.executeCommand("Get-Process");
+				PowerShellResponse response = powerShell.executeCommand("Get-Process");
 
-			Assert.assertTrue(response.isError());
-			Assert.assertTrue(response.getCommandOutput().contains("powerShell2.exe"));
-		} finally {
-			// Always close PowerShell session to free resources.
-			if (powerShell != null) {
-				powerShell.close();
+				Assert.assertTrue(response.isError());
+				Assert.assertTrue(response.getCommandOutput().contains("powerShell2.exe"));
+			} finally {
+				// Always close PowerShell session to free resources.
+				if (powerShell != null) {
+					powerShell.close();
+				}
 			}
 		}
 	}
