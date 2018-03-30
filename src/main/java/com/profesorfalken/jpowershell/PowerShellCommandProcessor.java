@@ -142,15 +142,6 @@ class PowerShellCommandProcessor implements Callable<String> {
     }
 
     /**
-     * Return the given name of the command processor
-     *
-     * @return name of the command processor
-     */
-    public String getName() {
-        return this.name;
-    }
-
-    /**
      * Return if the execution finished with a timeout
      *
      * @return name of the command processor
