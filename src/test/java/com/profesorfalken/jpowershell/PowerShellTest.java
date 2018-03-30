@@ -236,7 +236,6 @@ public class PowerShellTest {
 
 			Assert.assertTrue(response.isError());
 			Assert.assertTrue(response.getCommandOutput().contains("powerShell2.exe"));
-		} catch (PowerShellNotAvailableException ex) {
 		} finally {
 			// Always close PowerShell session to free resources.
 			if (powerShell != null) {
@@ -275,7 +274,6 @@ public class PowerShellTest {
 
 					System.out.println("BIOS information:" + response.getCommandOutput());
 				}
-			} catch (PowerShellNotAvailableException ex) {
 			} finally {
 				if (powerShell != null) {
 					powerShell.close();
