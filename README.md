@@ -78,7 +78,7 @@ For example:
     //Set the timeout when waiting for command to terminate to 30 seconds instead of 10 (default)
     Map<String, String> myConfig = new HashMap<>();
     myConfig.put("maxWait", "30000");
-    response = powerShell.configure(myConfig).executeCommand("Get-WmiObject Win32_BIOS");
+    response = powerShell.configuration(myConfig).executeCommand("Get-WmiObject Win32_BIOS");
 ```
 
 The three variables that can be configured in jPowerShell are: 
