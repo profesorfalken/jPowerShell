@@ -15,17 +15,13 @@
  */
 package com.profesorfalken.jpowershell;
 
-import java.io.IOException;
-
 /**
  * Custom checked exception produced when the Powershell executable cannot 
  * be found
  * 
  * @author Javier Garcia Alonso
  */
-public class PowerShellNotAvailableException extends IOException{
-
-	private static final long serialVersionUID = 8387251378765251753L;
+public class PowerShellNotAvailableException extends RuntimeException{
 
     PowerShellNotAvailableException(String message) {
         super(message);
