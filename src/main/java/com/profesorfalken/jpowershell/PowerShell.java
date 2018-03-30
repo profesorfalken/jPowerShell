@@ -275,7 +275,7 @@ public class PowerShell {
 		try {
 
 			tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1");
-			if (tmpFile == null || !tmpFile.exists()) {
+			if (!tmpFile.exists()) {
 				return null;
 			}
 

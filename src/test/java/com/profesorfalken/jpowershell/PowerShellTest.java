@@ -561,6 +561,6 @@ public class PowerShellTest {
 				writer.close();
 			}
 		}
-		return (tmpFile != null) ? tmpFile.getAbsolutePath() : null;
+		return tmpFile.getAbsolutePath();
 	}
 }
