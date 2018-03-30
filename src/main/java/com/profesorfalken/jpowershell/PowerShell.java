@@ -64,6 +64,7 @@ public class PowerShell {
 	private int waitPause = 10;
 	private long maxWait = 10000;
 	private boolean remoteMode = false;
+	private String unixCmdName = "powershell";
 
 	// Variables for script mode
 	private boolean scriptMode = false;
@@ -105,6 +106,8 @@ public class PowerShell {
 			this.remoteMode = Boolean
 					.valueOf((config != null && config.get("remoteMode") != null) ? config.get("remoteMode")
 							: PowerShellConfig.getConfig().getProperty("remoteMode"));
+			this.unixCmdName = (config != null && config.get("unixCmdName") != null) ? config.get("unixCmdName")
+							: PowerShellConfig.getConfig().getProperty("unixCmdName");
 		} catch (NumberFormatException nfe) {
 			Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
 					"Could not read configuration. Use default values.", nfe);
@@ -121,7 +124,7 @@ public class PowerShell {
 			pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", "powershell.exe",
 					"-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
 		} else {
-			pb = new ProcessBuilder("powershell -nologo -noexit -Command -");
+			pb = new ProcessBuilder(unixCmdName, "-nologo", "-noexit", "-Command", "-");
 		}
 
 		try {
