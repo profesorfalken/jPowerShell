@@ -59,6 +59,10 @@ public class PowerShell {
 	private boolean closed = false;
 	private ExecutorService threadpool;
 
+	//Default PowerShell executable path
+	private static final String DEFAULT_WIN_EXECUTABLE  = "powershell.exe";
+	private static final String DEFAULT_LINUX_EXECUTABLE  = "powershell";
+
 	// Config values
 	private int maxThreads = 3;
 	private int waitPause = 10;
@@ -113,15 +117,17 @@ public class PowerShell {
 	}
 
 	// Initializes PowerShell console in which we will enter the commands
-	private PowerShell initalize() throws PowerShellNotAvailableException {
+	private PowerShell initalize(String customPowerShellExecutablePath) throws PowerShellNotAvailableException {
 		String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
 		ProcessBuilder pb = null;
 
 		if (OSDetector.isWindows()) {
-			pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", "powershell.exe",
+			String powerShellExecutable = customPowerShellExecutablePath == null ? DEFAULT_WIN_EXECUTABLE : customPowerShellExecutablePath;
+			pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", powerShellExecutable ,
 					"-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
 		} else {
-			pb = new ProcessBuilder("powershell -nologo -noexit -Command -");
+			String powerShellExecutable = customPowerShellExecutablePath == null ? DEFAULT_LINUX_EXECUTABLE : customPowerShellExecutablePath;
+			pb = new ProcessBuilder(String.format("%s -nologo -noexit -Command -"), powerShellExecutable);
 		}
 
 		try {
@@ -145,19 +151,38 @@ public class PowerShell {
 
 	/**
 	 * Creates a session in PowerShell console an returns an instance which allows
-	 * to execute commands in PowerShell context
+	 * to execute commands in PowerShell context.<br>
+	 * It uses the default PowerShell installation.
 	 *
 	 * @return an instance of the class
 	 * @throws PowerShellNotAvailableException
 	 *             if PowerShell is not installed in the system
 	 */
 	public static PowerShell openSession() throws PowerShellNotAvailableException {
+		return openSession(null);
+	}
+
+	/**
+	 * Creates a session in PowerShell console an returns an instance which allows
+	 * to execute commands in PowerShell context.<br>
+	 * This method allows to define a PowersShell executable path different from default
+	 *
+	 * @param customPowerShellExecutablePath the path of powershell executable. If you are using
+	 * the default installation path, call {@link #openSession()} method instead
+	 *
+	 * @return an instance of the class
+	 * @throws PowerShellNotAvailableException
+	 *             if PowerShell is not installed in the system
+	 */
+	public static PowerShell openSession(String customPowerShellExecutablePath) throws PowerShellNotAvailableException {
 		PowerShell powerShell = new PowerShell();
 
 		// Start with default configuration
 		powerShell.configuration(null);
 
-		return powerShell.initalize();
+		String powerShellExecutablePath = customPowerShellExecutablePath == null ? (OSDetector.isWindows() ? DEFAULT_WIN_EXECUTABLE : DEFAULT_LINUX_EXECUTABLE) : customPowerShellExecutablePath;
+
+		return powerShell.initalize(powerShellExecutablePath);
 	}
 
 	/**
