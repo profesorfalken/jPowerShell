@@ -91,7 +91,7 @@ class PowerShellCommandProcessor implements Callable<String> {
         String line;
         while (null != (line = this.reader.readLine())) {
             
-            //In the case of script mode it finish when the last line is readed
+            //In the case of script mode it finish when the last line is read
             if (this.scriptMode) {
                 if (line.equals(PowerShell.END_SCRIPT_STRING)) {
                     break;

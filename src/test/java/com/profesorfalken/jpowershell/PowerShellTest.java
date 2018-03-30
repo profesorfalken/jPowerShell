@@ -245,7 +245,7 @@ public class PowerShellTest {
 	}
 
 	/**
-	 * Test comples loop example.
+	 * Test complex loop example.
 	 *
 	 * @throws java.lang.Exception
 	 */
