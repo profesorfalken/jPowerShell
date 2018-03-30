@@ -15,7 +15,7 @@ package com.profesorfalken.jpowershell;
 
 /**
  * Detects used OS
- * 
+ *
  * @author Javier Garcia Alonso
  */
 class OSDetector {

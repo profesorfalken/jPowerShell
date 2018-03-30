@@ -20,15 +20,15 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 /**
- * Utility class that reads the content of the configuration file and convert it into 
+ * Utility class that reads the content of the configuration file and convert it into
  * Properties.
- * 
+ *
  * @author Javier Garcia Alonso
  */
 final class PowerShellConfig {
-   private static final String CONFIG_FILENAME = "jpowershell.properties";
-   
-   private static Properties config;   
+    private static final String CONFIG_FILENAME = "jpowershell.properties";
+
+    private static Properties config;
 
     public static Properties getConfig() {
         if (config == null) {
@@ -41,7 +41,7 @@ final class PowerShellConfig {
                         .log(Level.SEVERE, "Cannot read config values from file:" + CONFIG_FILENAME, ex);
             }
         }
-        
+
         return config;
     }
 }

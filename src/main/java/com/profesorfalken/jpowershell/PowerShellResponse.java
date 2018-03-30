@@ -16,9 +16,9 @@
 package com.profesorfalken.jpowershell;
 
 /**
- * Response of PowerShell command. This object encapsulate all the useful 
+ * Response of PowerShell command. This object encapsulate all the useful
  * returned information
- * 
+ *
  * @author Javier Garcia Alonso
  */
 public class PowerShellResponse {
@@ -35,16 +35,16 @@ public class PowerShellResponse {
 
     /**
      * True if the command finished in error
-     * 
+     *
      * @return boolean value
      */
     public boolean isError() {
         return error;
     }
-    
+
     /**
      * Retrieves the content returned by the executed command
-     * 
+     *
      * @return boolean value
      */
     public String getCommandOutput() {
@@ -53,7 +53,7 @@ public class PowerShellResponse {
 
     /**
      * True if the command finished in timeout
-     * 
+     *
      * @return boolean value
      */
     public boolean isTimeout() {
