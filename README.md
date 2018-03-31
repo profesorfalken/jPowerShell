@@ -93,7 +93,7 @@ The three variables that can be configured in jPowerShell are:
 
 #### Setting the PowerShell executable path ####
 
-If the PowerShell executable has a different name/path on your system, you can change when opening a new session: 
+If the PowerShell executable has a different name/path on your system, you can change it when opening a new session: 
 
 ```java
    PowerShellResponse response = null;
