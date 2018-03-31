@@ -15,11 +15,11 @@ For example, for Maven you have just to add to your pom.xml:
       <dependency>
 	        <groupId>com.profesorfalken</groupId>
 	        <artifactId>jPowerShell</artifactId>
-	        <version>1.9.1</version>
+	        <version>2.0</version>
         </dependency>
 
 Instead, you can direct download the JAR file and add it to your classpath. 
-https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/1.9.1/jPowerShell-1.9.1.jar
+https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/2.0/jPowerShell-2.0.jar
 
 ## Basic Usage ##
 
@@ -91,6 +91,17 @@ The three variables that can be configured in jPowerShell are:
 
 *remoteMode*: it should be true when we are executing a command in remote. Otherwise the execution will finish in timeout.
 
+#### Setting the PowerShell executable path ####
+
+If the PowerShell executable has a different name/path on your system, you can change when opening a new session: 
+
+```java
+   PowerShellResponse response = null;
+   try {
+       //Creates PowerShell session
+       PowerShell powerShell = PowerShell.openSession("myCustomPowerShellExecutable.exe");
+       [...]
+```       
 
 #### Executing PowerShell Script ####
 
