@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  *
  * @author Javier Garcia Alonso
  */
-public class PowerShell {
+public class PowerShell implements AutoCloseable {
 
     // Process to store PowerShell session
     private Process p;
@@ -364,6 +364,7 @@ public class PowerShell {
     /**
      * Closes all the resources used to maintain the PowerShell context
      */
+    @Override
     public void close() {
         if (!this.closed) {
             try {
