@@ -17,11 +17,18 @@ package com.profesorfalken.jpowershell;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+//JNA only!
+//import java.lang.reflect.Field;
+//import com.sun.jna.Pointer;
+//import com.sun.jna.platform.win32.Kernel32;
+//import com.sun.jna.platform.win32.WinNT;
 
 /**
  * Allows to open a session into PowerShell console and launch different
@@ -44,6 +51,7 @@ public class PowerShell implements AutoCloseable {
     // Threaded session variables
     private boolean closed = false;
     private ExecutorService threadpool;
+    private boolean blocked = false;
 
     //Default PowerShell executable path
     private static final String DEFAULT_WIN_EXECUTABLE = "powershell.exe";
@@ -57,6 +65,7 @@ public class PowerShell implements AutoCloseable {
 
     // Variables for script mode
     private boolean scriptMode = false;
+    private File tmpFile;
     public static final String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
 
     // Private constructor.
@@ -157,6 +166,7 @@ public class PowerShell implements AutoCloseable {
      * @throws PowerShellNotAvailableException if PowerShell is not installed in the system
      */
     public static PowerShell openSession(String customPowerShellExecutablePath) throws PowerShellNotAvailableException {
+        @SuppressWarnings("resource")
         PowerShell powerShell = new PowerShell();
 
         // Start with default configuration
@@ -177,12 +187,16 @@ public class PowerShell implements AutoCloseable {
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(), this.maxWait,
+        Instant instant = Instant.now();
+		long timeStampMillis = instant.toEpochMilli();
+    	
+        Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(),
                 this.waitPause, this.scriptMode);
         Callable<String> commandProcessorError = new PowerShellCommandProcessor("error", p.getErrorStream(),
-                (this.maxWait + this.waitPause + 100) /*standard processor should always timeout first!*/, this.waitPause, false);
+        		this.waitPause, this.scriptMode);
 
         String commandOutput = "";
+        String commandError = "";
         boolean isError = false;
         boolean timeout = false;
 
@@ -196,31 +210,66 @@ public class PowerShell implements AutoCloseable {
         // Launch command
         commandWriter.println(command);
 
-        try {
-            while (!result.isDone() && !resultError.isDone()) {
-                Thread.sleep(this.waitPause);
-            }
-            if (result.isDone()) {
-                if (((PowerShellCommandProcessor) commandProcessor).isTimeout()) {
-                    timeout = true;
-                } else {
-                    commandOutput = result.get();
-                }
-            } else {
-                isError = true;
-                commandOutput = resultError.get();
-            }
-        } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
-                    "Unexpected error when processing PowerShell command", ex);
-        } finally {
-            // issue #2. Close and cancel processors/threads - Thanks to r4lly
-            // for helping me here
-            ((PowerShellCommandProcessor) commandProcessor).close();
-            ((PowerShellCommandProcessor) commandProcessorError).close();
-        }
+		long elapsedTime = 0;
 
-        return new PowerShellResponse(isError, commandOutput, timeout);
+		try {
+			while ((!result.isDone() || !resultError.isDone()) && (elapsedTime < maxWait))  {
+				
+				//wait for both futures to be done or timeout
+				Thread.sleep(this.waitPause);
+				elapsedTime = Instant.now().toEpochMilli() - timeStampMillis;
+			}
+									
+			if (elapsedTime >= maxWait) {
+				// Command timed out during execution, but may have some output
+				timeout = true;
+				commandOutput = result.get(waitPause, TimeUnit.MILLISECONDS);
+				commandOutput += resultError.get(waitPause, TimeUnit.MILLISECONDS);
+				
+			} else {
+				
+				//get the output (read is already done)
+				commandOutput = result.get();
+				commandError = resultError.get();
+								
+				if(commandError.equals("")) {
+					//Command finished successfully
+				} else {
+					//Command failed
+					isError = true;
+					commandOutput = commandError;
+				}
+				
+			}
+
+			if(this.scriptMode && !timeout && !isError) {
+				//Delete temp file if execution was successful
+				tmpFile.delete();
+			}
+
+		} catch (InterruptedException ex) {
+			isError = true;
+			timeout = true;
+			this.blocked = true;
+			Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+					"Unexpected interrupt while processing PowerShell command", ex);
+			Thread.currentThread().interrupt();
+		} catch (ExecutionException ex) {
+			isError = true;
+			Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+					"Unexpected error when processing PowerShell command", ex);
+		} catch (TimeoutException e) {
+			Logger.getLogger(PowerShell.class.getName()).log(Level.WARNING,
+					"Failed to read data due to timeout, close will be forced!");
+			this.blocked = true;
+		} finally {
+			// issue #2. Close and cancel processors/threads - Thanks to r4lly
+			// for helping me here
+			((PowerShellCommandProcessor) commandProcessor).close();
+			((PowerShellCommandProcessor) commandProcessorError).close();
+		}
+
+		return new PowerShellResponse(isError, commandOutput, timeout);
     }
 
     /**
@@ -250,7 +299,7 @@ public class PowerShell implements AutoCloseable {
     private File createWriteTempFile(BufferedReader srcReader) {
 
         BufferedWriter tmpWriter = null;
-        File tmpFile = null;
+        tmpFile = null;
 
         try {
 
@@ -267,7 +316,10 @@ public class PowerShell implements AutoCloseable {
             }
 
             // Add end script line
+            tmpWriter.write("$host.ui.WriteErrorLine('" + END_SCRIPT_STRING + "')");
+            tmpWriter.newLine();
             tmpWriter.write("Write-Host \"" + END_SCRIPT_STRING + "\"");
+
         } catch (IOException ioex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
                     "Unexpected error while writing temporary PowerShell script", ioex);
@@ -344,7 +396,7 @@ public class PowerShell implements AutoCloseable {
      * @param params    the parameters of the script
      * @return response with the output of the command
      */
-    private PowerShellResponse executeScript(BufferedReader srcReader, String params) {
+    public PowerShellResponse executeScript(BufferedReader srcReader, String params) {
 
         if (srcReader != null) {
             File tmpFile = createWriteTempFile(srcReader);
@@ -366,6 +418,56 @@ public class PowerShell implements AutoCloseable {
      */
     @Override
     public void close() {
+    	
+		if (blocked) {
+			Logger.getLogger(PowerShell.class.getName()).log(Level.INFO,
+					"Shell is blocked, closing of PowerShell will be forced!");
+			
+			if (System.getProperty("java.version").startsWith("1.")) {
+				System.out.println("PID unknown, no Java 9 or higher, can not do anything to kill the child processes, maybe use jna workaround?");
+				//p.destroyForcibly(); //will not kill the childs!
+				
+				boolean jna = false;
+				
+				if (jna == true) {
+//					int pid = -1;
+//
+//					Field f;
+//					try {
+//						f = p.getClass().getDeclaredField("handle");
+//						f.setAccessible(true);
+//						long handLong = f.getLong(p);
+//
+//						Kernel32 kernel = Kernel32.INSTANCE;
+//						WinNT.HANDLE handle = new WinNT.HANDLE();
+//						handle.setPointer(Pointer.createConstant(handLong));
+//						pid = kernel.GetProcessId(handle);
+//
+//					} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
+//						Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+//								"Unexpected error while getting process handle", e1);
+//					}
+//
+//					Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Killing process with PID: " + pid);
+//								
+//					try {
+//						Runtime.getRuntime().exec("taskkill.exe /f /PID " + pid + " /T");
+//						this.closed = true;
+//					} catch (IOException e) {
+//						Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+//								"Unexpected error while killing powershell process", e);
+//					}
+				}
+			} else {
+				//Compile with Java 9 required for this!
+//				p.descendants().forEach((p) -> {
+//					Logger.getLogger(PowerShell.class.getName()).log(Level.INFO, "Killing zombie process with PID: " + p.pid());
+//					p.destroyForcibly();
+//				});
+			}
+
+		}
+    	
         if (!this.closed) {
             try {
                 Future<String> closeTask = threadpool.submit(() -> {

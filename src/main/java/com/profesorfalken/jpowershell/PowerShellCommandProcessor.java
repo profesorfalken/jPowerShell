@@ -37,14 +37,11 @@ class PowerShellCommandProcessor implements Callable<String> {
     private final BufferedReader reader;
     private final String name;
 
-    private boolean closed = false;
-    private boolean timeout = false;
-
-    private boolean scriptMode = false;
-
-    private final long maxWait;
     private final int waitPause;
-
+        
+    private boolean closed = false;
+    private boolean scriptMode = false;
+    
     /**
      * Constructor that takes the output and the input of the PowerShell session
      *
@@ -54,11 +51,10 @@ class PowerShellCommandProcessor implements Callable<String> {
      * @param waitPause   long the wait pause in milliseconds
      * @param scriptMode  boolean indicates if the command executes a script
      */
-    public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause, boolean scriptMode) {
+    public PowerShellCommandProcessor(String name, InputStream inputStream, int waitPause, boolean scriptMode) {
         this.reader = new BufferedReader(new InputStreamReader(
                 inputStream));
         this.name = name;
-        this.maxWait = maxWait;
         this.waitPause = waitPause;
         this.scriptMode = scriptMode;
     }
@@ -73,9 +69,7 @@ class PowerShellCommandProcessor implements Callable<String> {
         StringBuilder powerShellOutput = new StringBuilder();
 
         try {
-            if (startReading()) {
-                readData(powerShellOutput);
-            }
+            readData(powerShellOutput);
         } catch (IOException ioe) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
             return ioe.getMessage();
@@ -113,21 +107,6 @@ class PowerShellCommandProcessor implements Callable<String> {
         }
     }
 
-    //Checks when we can start reading the output. Timeout if it takes too long in order to avoid hangs
-    private boolean startReading() throws IOException, InterruptedException {
-        int timeWaiting = 0;
-
-        while (!this.reader.ready()) {
-            Thread.sleep(this.waitPause);
-            timeWaiting += this.waitPause;
-            if ((timeWaiting > this.maxWait) || this.closed) {
-                this.timeout = timeWaiting > this.maxWait;
-                return false;
-            }
-        }
-        return true;
-    }
-
     //Checks when we the reader can continue to read.
     private boolean continueReading() throws IOException, InterruptedException {
         Thread.sleep(this.waitPause);
@@ -141,12 +120,4 @@ class PowerShellCommandProcessor implements Callable<String> {
         this.closed = true;
     }
 
-    /**
-     * Return if the execution finished with a timeout
-     *
-     * @return name of the command processor
-     */
-    public boolean isTimeout() {
-        return this.timeout;
-    }
 }
