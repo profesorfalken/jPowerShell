@@ -267,7 +267,7 @@ public class PowerShell implements AutoCloseable {
             }
 
             // Add end script line
-            tmpWriter.write("Write-Host \"" + END_SCRIPT_STRING + "\"");
+            tmpWriter.write("Write-Output \"" + END_SCRIPT_STRING + "\"");
         } catch (IOException ioex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
                     "Unexpected error while writing temporary PowerShell script", ioex);
@@ -415,6 +415,6 @@ public class PowerShell implements AutoCloseable {
     }
 
     private String completeRemoteCommand(String command) {
-        return command + ";Write-Host \"\"";
+        return command + ";Write-Output \"\"";
     }
 }
