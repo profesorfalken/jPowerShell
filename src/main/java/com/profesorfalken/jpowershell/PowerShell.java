@@ -344,7 +344,7 @@ public class PowerShell implements AutoCloseable {
      * @param params    the parameters of the script
      * @return response with the output of the command
      */
-    private PowerShellResponse executeScript(BufferedReader srcReader, String params) {
+    public PowerShellResponse executeScript(BufferedReader srcReader, String params) {
 
         if (srcReader != null) {
             File tmpFile = createWriteTempFile(srcReader);
