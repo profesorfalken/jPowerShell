@@ -307,7 +307,7 @@ public class PowerShell implements AutoCloseable {
      * @param params     the parameters of the script
      * @return response with the output of the command
      */
-    private PowerShellResponse executeScript(String scriptPath, String params) {
+    public PowerShellResponse executeScript(String scriptPath, String params) {
         BufferedReader srcReader = null;
 
         File scriptToExecute = new File(scriptPath);
