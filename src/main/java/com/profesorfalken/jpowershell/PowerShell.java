@@ -115,6 +115,8 @@ public class PowerShell implements AutoCloseable {
             pb =  new ProcessBuilder(powerShellExecutable,"-nologo","-noexit","-Command", "-");
         }
 
+        pb.redirectErrorStream(true);
+
         try {
             p = pb.start();
             if (!p.isAlive()) {
@@ -179,15 +181,14 @@ public class PowerShell implements AutoCloseable {
     public PowerShellResponse executeCommand(String command) {
         Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(), this.maxWait,
                 this.waitPause, this.scriptMode);
-        Callable<String> commandProcessorError = new PowerShellCommandProcessor("error", p.getErrorStream(),
-                (this.maxWait + this.waitPause + 100) /*standard processor should always timeout first!*/, this.waitPause, false);
+        /*Callable<String> commandProcessorError = new PowerShellCommandProcessor("error", p.getErrorStream(),
+                (this.maxWait + this.waitPause + 100) /*standard processor should always timeout first!*/ /*, this.waitPause, false);*/
 
         String commandOutput = "";
         boolean isError = false;
         boolean timeout = false;
 
         Future<String> result = threadpool.submit(commandProcessor);
-        Future<String> resultError = threadpool.submit(commandProcessorError);
 
         if (this.remoteMode) {
             command = completeRemoteCommand(command);
@@ -197,18 +198,14 @@ public class PowerShell implements AutoCloseable {
         commandWriter.println(command);
 
         try {
-            while (!result.isDone() && !resultError.isDone()) {
+            while (!result.isDone()/* && !resultError.isDone()*/) {
                 Thread.sleep(this.waitPause);
             }
-            if (result.isDone()) {
-                if (((PowerShellCommandProcessor) commandProcessor).isTimeout()) {
-                    timeout = true;
-                } else {
-                    commandOutput = result.get();
-                }
+
+            if (((PowerShellCommandProcessor) commandProcessor).isTimeout()) {
+                timeout = true;
             } else {
-                isError = true;
-                commandOutput = resultError.get();
+                commandOutput = result.get();
             }
         } catch (InterruptedException | ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
@@ -217,7 +214,6 @@ public class PowerShell implements AutoCloseable {
             // issue #2. Close and cancel processors/threads - Thanks to r4lly
             // for helping me here
             ((PowerShellCommandProcessor) commandProcessor).close();
-            ((PowerShellCommandProcessor) commandProcessorError).close();
         }
 
         return new PowerShellResponse(isError, commandOutput, timeout);
@@ -230,19 +226,14 @@ public class PowerShell implements AutoCloseable {
      * @return response with the output of the command
      */
     public static PowerShellResponse executeSingleCommand(String command) {
-        PowerShell session = null;
         PowerShellResponse response = null;
-        try {
-            session = PowerShell.openSession();
 
+        try (PowerShell session = PowerShell.openSession()){
             response = session.executeCommand(command);
         } catch (PowerShellNotAvailableException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "PowerShell not available", ex);
-        } finally {
-            if (session != null) {
-                session.close();
-            }
         }
+
         return response;
     }
 
