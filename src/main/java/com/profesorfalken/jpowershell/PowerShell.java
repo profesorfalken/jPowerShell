@@ -24,13 +24,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Allows to open a session into PowerShell console and launch different
- * commands.<br>
- * This class cannot be directly instantiated. Instead, use the method
- * PowerShell.openSession and call the commands using the returned instance.
+ * This API allows to open a session into PowerShell console and launch different commands.<br>
+ * This class cannot be instantiated directly. Please use instead the method
+ * PowerShell.openSession() and call the commands using the returned instance.
  * <p>
- * Once the session is finished, call close() method in order to free the
- * resources.
+ * Once the session is finished it should be closed in order to free resources.
+ * For doing that, you can either call manually close() or implement a try with resources as
+ * it implements {@link AutoCloseable}.
  *
  * @author Javier Garcia Alonso
  */
@@ -55,11 +55,11 @@ public class PowerShell implements AutoCloseable {
     private long maxWait = 10000;
     private boolean remoteMode = false;
 
-    // Variables for script mode
+    // Variables used for script mode
     private boolean scriptMode = false;
     public static final String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
 
-    // Private constructor.
+    // Private constructor. Instance using openSession method
     private PowerShell() {
     }
 
@@ -96,41 +96,45 @@ public class PowerShell implements AutoCloseable {
                             : PowerShellConfig.getConfig().getProperty("remoteMode"));
         } catch (NumberFormatException nfe) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
-                    "Could not read configuration. Use default values.", nfe);
+                    "Could not read configuration. Using default values.", nfe);
         }
         return this;
     }
 
     // Initializes PowerShell console in which we will enter the commands
-    private PowerShell initalize(String customPowerShellExecutablePath) throws PowerShellNotAvailableException {
+    private PowerShell initalize(String powerShellExecutablePath) throws PowerShellNotAvailableException {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
         ProcessBuilder pb = null;
 
+        //Start powershell executable in process
         if (OSDetector.isWindows()) {
-            String powerShellExecutable = customPowerShellExecutablePath == null ? DEFAULT_WIN_EXECUTABLE : customPowerShellExecutablePath;
-            pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", powerShellExecutable,
+            pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", powerShellExecutablePath,
                     "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
         } else {
-            String powerShellExecutable = customPowerShellExecutablePath == null ? DEFAULT_LINUX_EXECUTABLE : customPowerShellExecutablePath;
-            pb =  new ProcessBuilder(powerShellExecutable,"-nologo","-noexit","-Command", "-");
+            pb =  new ProcessBuilder(powerShellExecutablePath,"-nologo","-noexit","-Command", "-");
         }
 
+        //Merge standard and error streams
         pb.redirectErrorStream(true);
 
         try {
+            //Launch process
             p = pb.start();
-            if (!p.isAlive()) {
+
+            if (p.waitFor(5, TimeUnit.SECONDS) && !p.isAlive()) {
                 throw new PowerShellNotAvailableException(
                         "Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
             }
-        } catch (IOException ex) {
+        } catch (IOException | InterruptedException ex) {
             throw new PowerShellNotAvailableException(
                     "Cannot execute PowerShell. Please make sure that it is installed in your system", ex);
         }
 
-        commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
+        //Prepare writer that will be used to send commands to powershell
+        this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
 
-        // Init thread pool
+        //FIXME: is this really needed?
+        // Init thread pool. 2 threads are needed: one to write and read console
         this.threadpool = Executors.newFixedThreadPool(this.maxThreads);
 
         return this;
@@ -139,7 +143,7 @@ public class PowerShell implements AutoCloseable {
     /**
      * Creates a session in PowerShell console an returns an instance which allows
      * to execute commands in PowerShell context.<br>
-     * It uses the default PowerShell installation.
+     * It uses the default PowerShell installation in the system.
      *
      * @return an instance of the class
      * @throws PowerShellNotAvailableException if PowerShell is not installed in the system
@@ -170,7 +174,7 @@ public class PowerShell implements AutoCloseable {
     }
 
     /**
-     * Launch a PowerShell command.
+     * Execute a PowerShell command.
      * <p>
      * This method launch a thread which will be executed in the already created
      * PowerShell console context
@@ -181,8 +185,6 @@ public class PowerShell implements AutoCloseable {
     public PowerShellResponse executeCommand(String command) {
         Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(), this.maxWait,
                 this.waitPause, this.scriptMode);
-        /*Callable<String> commandProcessorError = new PowerShellCommandProcessor("error", p.getErrorStream(),
-                (this.maxWait + this.waitPause + 100) /*standard processor should always timeout first!*/ /*, this.waitPause, false);*/
 
         String commandOutput = "";
         boolean isError = false;
@@ -198,7 +200,7 @@ public class PowerShell implements AutoCloseable {
         commandWriter.println(command);
 
         try {
-            while (!result.isDone()/* && !resultError.isDone()*/) {
+            while (!result.isDone()) {
                 Thread.sleep(this.waitPause);
             }
 
@@ -301,23 +303,19 @@ public class PowerShell implements AutoCloseable {
     public PowerShellResponse executeScript(String scriptPath, String params) {
         BufferedReader srcReader = null;
 
-        File scriptToExecute = new File(scriptPath);
-        if (!scriptToExecute.exists()) {
-            return new PowerShellResponse(true, "Wrong script path: " + scriptToExecute, false);
-        }
-
         try {
-            srcReader = new BufferedReader(new FileReader(scriptToExecute));
+            srcReader = new BufferedReader(new FileReader(new File(scriptPath)));
         } catch (FileNotFoundException fnfex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
                     "Unexpected error when processing PowerShell script: file not found", fnfex);
+            return new PowerShellResponse(true, "Wrong script path: " + scriptPath, false);
         }
 
         return executeScript(srcReader, params);
     }
 
     /**
-     * Executed the provided PowerShell script in PowerShell console and gets
+     * Execute the provided PowerShell script in PowerShell console and gets
      * result.
      *
      * @param srcReader the script as BufferedReader (when loading File from jar)
@@ -328,7 +326,7 @@ public class PowerShell implements AutoCloseable {
     }
 
     /**
-     * Executed the provided PowerShell script in PowerShell console and gets
+     * Execute the provided PowerShell script in PowerShell console and gets
      * result.
      *
      * @param srcReader the script as BufferedReader (when loading File from jar)
@@ -369,14 +367,13 @@ public class PowerShell implements AutoCloseable {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
                         "Unexpected error when when closing PowerShell", ex);
             } finally {
+                commandWriter.close();
                 try {
                     p.getInputStream().close();
-                    p.getErrorStream().close();
                 } catch (IOException ex) {
                     Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
                             "Unexpected error when when closing streams", ex);
                 }
-                commandWriter.close();
                 if (this.threadpool != null) {
                     try {
                         this.threadpool.shutdownNow();
