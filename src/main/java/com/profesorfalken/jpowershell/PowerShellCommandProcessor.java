@@ -24,9 +24,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Processor used to send commands to PowerShell console.<p^>
- * It works as an independent thread and its results are collected using the
- * Future interface.
+ * Processor used to send commands to PowerShell console.<p>
+ * It works as an independent thread and its results are collected using the Future interface.
  *
  * @author Javier Garcia Alonso
  */
@@ -79,8 +78,6 @@ class PowerShellCommandProcessor implements Callable<String> {
         } catch (IOException ioe) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
             return ioe.getMessage();
-        } catch (Exception e) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", e);
         }
 
         return powerShellOutput.toString();
@@ -103,7 +100,7 @@ class PowerShellCommandProcessor implements Callable<String> {
             //When not in script mode, it exits when the command is finished
             if (!this.scriptMode) {
                 try {
-                    if (!continueReading() || this.closed) {
+                    if (this.closed || !continueReading()) {
                         break;
                     }
                 } catch (InterruptedException ex) {
