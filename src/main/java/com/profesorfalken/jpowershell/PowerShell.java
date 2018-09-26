@@ -134,7 +134,7 @@ public class PowerShell implements AutoCloseable {
         this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
 
         //FIXME: is this really needed?
-        // Init thread pool. 2 threads are needed: one to write and read console
+        // Init thread pool. 2 threads are needed: one to write and read console and the other to close it
         this.threadpool = Executors.newFixedThreadPool(this.maxThreads);
 
         return this;
