@@ -37,7 +37,6 @@ class PowerShellCommandProcessor implements Callable<String> {
     private final String name;
 
     private boolean closed = false;
-    private boolean timeout = false;
 
     private boolean scriptMode = false;
 
@@ -118,7 +117,6 @@ class PowerShellCommandProcessor implements Callable<String> {
             Thread.sleep(this.waitPause);
             timeWaiting += this.waitPause;
             if ((timeWaiting > this.maxWait) || this.closed) {
-                this.timeout = timeWaiting > this.maxWait;
                 return false;
             }
         }
@@ -136,14 +134,5 @@ class PowerShellCommandProcessor implements Callable<String> {
      */
     public void close() {
         this.closed = true;
-    }
-
-    /**
-     * Return if the execution finished with a timeout
-     *
-     * @return name of the command processor
-     */
-    public boolean isTimeout() {
-        return this.timeout;
     }
 }

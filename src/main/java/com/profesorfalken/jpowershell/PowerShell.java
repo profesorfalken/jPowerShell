@@ -101,6 +101,39 @@ public class PowerShell implements AutoCloseable {
         return this;
     }
 
+    /**
+     * Creates a session in PowerShell console an returns an instance which allows
+     * to execute commands in PowerShell context.<br>
+     * It uses the default PowerShell installation in the system.
+     *
+     * @return an instance of the class
+     * @throws PowerShellNotAvailableException if PowerShell is not installed in the system
+     */
+    public static PowerShell openSession() throws PowerShellNotAvailableException {
+        return openSession(null);
+    }
+
+    /**
+     * Creates a session in PowerShell console an returns an instance which allows
+     * to execute commands in PowerShell context.<br>
+     * This method allows to define a PowersShell executable path different from default
+     *
+     * @param customPowerShellExecutablePath the path of powershell executable. If you are using
+     *                                       the default installation path, call {@link #openSession()} method instead
+     * @return an instance of the class
+     * @throws PowerShellNotAvailableException if PowerShell is not installed in the system
+     */
+    public static PowerShell openSession(String customPowerShellExecutablePath) throws PowerShellNotAvailableException {
+        PowerShell powerShell = new PowerShell();
+
+        // Start with default configuration
+        powerShell.configuration(null);
+
+        String powerShellExecutablePath = customPowerShellExecutablePath == null ? (OSDetector.isWindows() ? DEFAULT_WIN_EXECUTABLE : DEFAULT_LINUX_EXECUTABLE) : customPowerShellExecutablePath;
+
+        return powerShell.initalize(powerShellExecutablePath);
+    }
+
     // Initializes PowerShell console in which we will enter the commands
     private PowerShell initalize(String powerShellExecutablePath) throws PowerShellNotAvailableException {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
@@ -141,39 +174,6 @@ public class PowerShell implements AutoCloseable {
     }
 
     /**
-     * Creates a session in PowerShell console an returns an instance which allows
-     * to execute commands in PowerShell context.<br>
-     * It uses the default PowerShell installation in the system.
-     *
-     * @return an instance of the class
-     * @throws PowerShellNotAvailableException if PowerShell is not installed in the system
-     */
-    public static PowerShell openSession() throws PowerShellNotAvailableException {
-        return openSession(null);
-    }
-
-    /**
-     * Creates a session in PowerShell console an returns an instance which allows
-     * to execute commands in PowerShell context.<br>
-     * This method allows to define a PowersShell executable path different from default
-     *
-     * @param customPowerShellExecutablePath the path of powershell executable. If you are using
-     *                                       the default installation path, call {@link #openSession()} method instead
-     * @return an instance of the class
-     * @throws PowerShellNotAvailableException if PowerShell is not installed in the system
-     */
-    public static PowerShell openSession(String customPowerShellExecutablePath) throws PowerShellNotAvailableException {
-        PowerShell powerShell = new PowerShell();
-
-        // Start with default configuration
-        powerShell.configuration(null);
-
-        String powerShellExecutablePath = customPowerShellExecutablePath == null ? (OSDetector.isWindows() ? DEFAULT_WIN_EXECUTABLE : DEFAULT_LINUX_EXECUTABLE) : customPowerShellExecutablePath;
-
-        return powerShell.initalize(powerShellExecutablePath);
-    }
-
-    /**
      * Execute a PowerShell command.
      * <p>
      * This method launch a thread which will be executed in the already created
@@ -183,13 +183,12 @@ public class PowerShell implements AutoCloseable {
      * @return PowerShellResponse the information returned by powerShell
      */
     public PowerShellResponse executeCommand(String command) {
-        Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(), this.maxWait,
-                this.waitPause, this.scriptMode);
-
         String commandOutput = "";
         boolean isError = false;
         boolean timeout = false;
 
+        Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(), this.maxWait,
+                this.waitPause, this.scriptMode);
         Future<String> result = threadpool.submit(commandProcessor);
 
         if (this.remoteMode) {
@@ -200,14 +199,12 @@ public class PowerShell implements AutoCloseable {
         commandWriter.println(command);
 
         try {
-            while (!result.isDone()) {
-                Thread.sleep(this.waitPause);
-            }
-
-            if (((PowerShellCommandProcessor) commandProcessor).isTimeout()) {
-                timeout = true;
-            } else {
-                commandOutput = result.get();
+            if (!result.isDone()) {
+                try {
+                    commandOutput = result.get(maxWait, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException timeoutEx) {
+                    timeout = true;
+                }
             }
         } catch (InterruptedException | ExecutionException ex) {
             Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
