@@ -204,6 +204,8 @@ public class PowerShell implements AutoCloseable {
                     commandOutput = result.get(maxWait, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException timeoutEx) {
                     timeout = true;
+                    //Interrupt command after timeout
+                    result.cancel(true);
                 }
             }
         } catch (InterruptedException | ExecutionException ex) {
