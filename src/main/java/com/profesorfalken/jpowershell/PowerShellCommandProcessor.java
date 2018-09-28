@@ -99,7 +99,7 @@ class PowerShellCommandProcessor implements Callable<String> {
             //When not in script mode, it exits when the command is finished
             if (!this.scriptMode) {
                 try {
-                    if (this.closed || !continueReading()) {
+                    if (this.closed || !canContinueReading()) {
                         break;
                     }
                 } catch (InterruptedException ex) {
@@ -124,7 +124,7 @@ class PowerShellCommandProcessor implements Callable<String> {
     }
 
     //Checks when we the reader can continue to read.
-    private boolean continueReading() throws IOException, InterruptedException {
+    private boolean canContinueReading() throws IOException, InterruptedException {
         Thread.sleep(this.waitPause);
         return this.reader.ready();
     }
