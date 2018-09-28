@@ -17,6 +17,8 @@ package com.profesorfalken.jpowershell;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -166,7 +168,6 @@ public class PowerShell implements AutoCloseable {
         //Prepare writer that will be used to send commands to powershell
         this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
 
-        //FIXME: is this really needed?
         // Init thread pool. 2 threads are needed: one to write and read console and the other to close it
         this.threadpool = Executors.newFixedThreadPool(this.maxThreads);
 
@@ -238,48 +239,6 @@ public class PowerShell implements AutoCloseable {
         return response;
     }
 
-    // Writes a temp powershell script file based on the srcReader
-    private File createWriteTempFile(BufferedReader srcReader) {
-
-        BufferedWriter tmpWriter = null;
-        File tmpFile = null;
-
-        try {
-
-            tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1");
-            if (!tmpFile.exists()) {
-                return null;
-            }
-
-            tmpWriter = new BufferedWriter(new FileWriter(tmpFile));
-            String line;
-            while (srcReader != null && (line = srcReader.readLine()) != null) {
-                tmpWriter.write(line);
-                tmpWriter.newLine();
-            }
-
-            // Add end script line
-            tmpWriter.write("Write-Output \"" + END_SCRIPT_STRING + "\"");
-        } catch (IOException ioex) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
-                    "Unexpected error while writing temporary PowerShell script", ioex);
-        } finally {
-            try {
-                if (srcReader != null) {
-                    srcReader.close();
-                }
-                if (tmpWriter != null) {
-                    tmpWriter.close();
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
-                        "Unexpected error when processing temporary PowerShell script", ex);
-            }
-        }
-
-        return tmpFile;
-    }
-
     /**
      * Executed the provided PowerShell script in PowerShell console and gets
      * result.
@@ -312,6 +271,45 @@ public class PowerShell implements AutoCloseable {
 
         return executeScript(srcReader, params);
     }
+
+    // Writes a temp powershell script file based on the srcReader
+    private File createWriteTempFile(BufferedReader srcReader) {
+
+        BufferedWriter tmpWriter = null;
+        File tmpFile = null;
+
+        try {
+            tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1");
+            if (!tmpFile.exists()) {
+                return null;
+            }
+
+            tmpWriter = new BufferedWriter(new FileWriter(tmpFile));
+            String line;
+            while (srcReader != null && (line = srcReader.readLine()) != null) {
+                tmpWriter.write(line);
+                tmpWriter.newLine();
+            }
+
+            // Add end script line
+            tmpWriter.write("Write-Output \"" + END_SCRIPT_STRING + "\"");
+        } catch (IOException ioex) {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                    "Unexpected error while writing temporary PowerShell script", ioex);
+        } finally {
+            try {
+                if (tmpWriter != null) {
+                    tmpWriter.close();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                        "Unexpected error when processing temporary PowerShell script", ex);
+            }
+        }
+
+        return tmpFile;
+    }
+
 
     /**
      * Execute the provided PowerShell script in PowerShell console and gets
@@ -362,7 +360,7 @@ public class PowerShell implements AutoCloseable {
                     return "OK";
                 });
                 waitUntilClose(closeTask);
-            } catch (InterruptedException ex) {
+            } catch (InterruptedException | ExecutionException ex) {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
                         "Unexpected error when when closing PowerShell", ex);
             } finally {
@@ -388,16 +386,16 @@ public class PowerShell implements AutoCloseable {
         }
     }
 
-    private void waitUntilClose(Future<String> task) throws InterruptedException {
-        int closingTime = 0;
-        while (!task.isDone()) {
-            if (closingTime > maxWait) {
+    private void waitUntilClose(Future<String> task) throws InterruptedException, ExecutionException {
+        if (!task.isDone()) {
+            try {
+                task.get(maxWait, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException timeoutEx) {
                 Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
                         "Unexpected error when closing PowerShell: TIMEOUT!");
-                break;
+                //Interrupt command after timeout
+                task.cancel(true);
             }
-            Thread.sleep(this.waitPause);
-            closingTime += this.waitPause;
         }
     }
 
