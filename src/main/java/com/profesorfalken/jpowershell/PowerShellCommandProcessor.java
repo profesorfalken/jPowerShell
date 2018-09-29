@@ -34,7 +34,6 @@ class PowerShellCommandProcessor implements Callable<String> {
     private static final String CRLF = "\r\n";
 
     private final BufferedReader reader;
-    private final String name;
 
     private boolean closed = false;
 
@@ -55,7 +54,6 @@ class PowerShellCommandProcessor implements Callable<String> {
     public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause, boolean scriptMode) {
         this.reader = new BufferedReader(new InputStreamReader(
                 inputStream));
-        this.name = name;
         this.maxWait = maxWait;
         this.waitPause = waitPause;
         this.scriptMode = scriptMode;
