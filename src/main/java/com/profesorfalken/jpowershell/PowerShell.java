@@ -38,6 +38,9 @@ import java.util.logging.Logger;
  */
 public class PowerShell implements AutoCloseable {
 
+    //Declare logger
+    private static Logger logger = Logger.getLogger(PowerShell.class.getName());
+
     // Process to store PowerShell session
     private Process p;
     // Writer to send commands
@@ -93,7 +96,7 @@ public class PowerShell implements AutoCloseable {
                     .valueOf((config != null && config.get("remoteMode") != null) ? config.get("remoteMode")
                             : PowerShellConfig.getConfig().getProperty("remoteMode"));
         } catch (NumberFormatException nfe) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+            logger.log(Level.SEVERE,
                     "Could not read configuration. Using default values.", nfe);
         }
         return this;
@@ -206,7 +209,7 @@ public class PowerShell implements AutoCloseable {
                 }
             }
         } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+            logger.log(Level.SEVERE,
                     "Unexpected error when processing PowerShell command", ex);
         } finally {
             // issue #2. Close and cancel processors/threads - Thanks to r4lly
@@ -229,7 +232,7 @@ public class PowerShell implements AutoCloseable {
         try (PowerShell session = PowerShell.openSession()){
             response = session.executeCommand(command);
         } catch (PowerShellNotAvailableException ex) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "PowerShell not available", ex);
+            logger.log(Level.SEVERE, "PowerShell not available", ex);
         }
 
         return response;
@@ -260,7 +263,7 @@ public class PowerShell implements AutoCloseable {
         try {
             srcReader = new BufferedReader(new FileReader(new File(scriptPath)));
         } catch (FileNotFoundException fnfex) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+            logger.log(Level.SEVERE,
                     "Unexpected error when processing PowerShell script: file not found", fnfex);
             return new PowerShellResponse(true, "Wrong script path: " + scriptPath, false);
         }
@@ -298,7 +301,7 @@ public class PowerShell implements AutoCloseable {
                 return new PowerShellResponse(true, "Cannot create temp script file!", false);
             }
         } else {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Script buffered reader is null!");
+            logger.log(Level.SEVERE, "Script buffered reader is null!");
             return new PowerShellResponse(true, "Script buffered reader is null!", false);
         }
 
@@ -326,7 +329,7 @@ public class PowerShell implements AutoCloseable {
             // Add end script line
             tmpWriter.write("Write-Output \"" + END_SCRIPT_STRING + "\"");
         } catch (IOException ioex) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+            logger.log(Level.SEVERE,
                     "Unexpected error while writing temporary PowerShell script", ioex);
         } finally {
             try {
@@ -334,7 +337,7 @@ public class PowerShell implements AutoCloseable {
                     tmpWriter.close();
                 }
             } catch (IOException ex) {
-                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                logger.log(Level.SEVERE,
                         "Unexpected error when processing temporary PowerShell script", ex);
             }
         }
@@ -356,14 +359,14 @@ public class PowerShell implements AutoCloseable {
                 });
                 waitUntilClose(closeTask);
             } catch (InterruptedException | ExecutionException ex) {
-                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                logger.log(Level.SEVERE,
                         "Unexpected error when when closing PowerShell", ex);
             } finally {
                 commandWriter.close();
                 try {
                     p.getInputStream().close();
                 } catch (IOException ex) {
-                    Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                    logger.log(Level.SEVERE,
                             "Unexpected error when when closing streams", ex);
                 }
                 if (this.threadpool != null) {
@@ -371,7 +374,7 @@ public class PowerShell implements AutoCloseable {
                         this.threadpool.shutdownNow();
                         this.threadpool.awaitTermination(5, TimeUnit.SECONDS);
                     } catch (InterruptedException ex) {
-                        Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                        logger.log(Level.SEVERE,
                                 "Unexpected error when when shutting thread pool", ex);
                     }
 
@@ -386,7 +389,7 @@ public class PowerShell implements AutoCloseable {
             try {
                 task.get(maxWait, TimeUnit.MILLISECONDS);
             } catch (TimeoutException timeoutEx) {
-                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                logger.log(Level.SEVERE,
                         "Unexpected error when closing PowerShell: TIMEOUT!");
                 //Interrupt command after timeout
                 task.cancel(true);
