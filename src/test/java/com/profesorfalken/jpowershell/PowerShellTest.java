@@ -241,13 +241,14 @@ public class PowerShellTest {
      *
      * @throws java.lang.Exception
      */
-    @Test(expected = PowerShellNotAvailableException.class)
     public void testOtherExecutablePath() throws Exception {
         PowerShell powerShell = null;
         if (OSDetector.isWindows()) {
             try {
                 powerShell = PowerShell.openSession("powerShell2.exe");
 
+                //Should throw a PowerShellNotAvailableException
+                exception.expect(PowerShellNotAvailableException.class);
                 PowerShellResponse response = powerShell.executeCommand("Get-Process");
             } finally {
                 // Always close PowerShell session to free resources.
