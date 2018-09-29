@@ -230,10 +230,12 @@ public class PowerShellTest {
     @Test (expected = Test.None.class /* no exception expected */)
     public void testFunctionalExample() throws Exception {
         System.out.println("testFunctionalExample");
-        PowerShell.openSession()
-                .executeCommandAndChain("Get-Process", (res -> System.out.println("List Processes:" + res.getCommandOutput())))
-                .executeCommandAndChain("Get-WmiObject Win32_BIOS",(res -> System.out.println("BIOS information:" + res.getCommandOutput())))
-                .close();
+        if (OSDetector.isWindows()) {
+            PowerShell.openSession()
+                    .executeCommandAndChain("Get-Process", (res -> System.out.println("List Processes:" + res.getCommandOutput())))
+                    .executeCommandAndChain("Get-WmiObject Win32_BIOS", (res -> System.out.println("BIOS information:" + res.getCommandOutput())))
+                    .close();
+        }
     }
 
     /**
