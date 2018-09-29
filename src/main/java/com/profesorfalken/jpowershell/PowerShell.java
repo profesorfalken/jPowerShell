@@ -272,6 +272,42 @@ public class PowerShell implements AutoCloseable {
         return executeScript(srcReader, params);
     }
 
+    /**
+     * Execute the provided PowerShell script in PowerShell console and gets
+     * result.
+     *
+     * @param srcReader the script as BufferedReader (when loading File from jar)
+     * @return response with the output of the command
+     */
+    public PowerShellResponse executeScript(BufferedReader srcReader) {
+        return executeScript(srcReader, "");
+    }
+
+    /**
+     * Execute the provided PowerShell script in PowerShell console and gets
+     * result.
+     *
+     * @param srcReader the script as BufferedReader (when loading File from jar)
+     * @param params    the parameters of the script
+     * @return response with the output of the command
+     */
+    public PowerShellResponse executeScript(BufferedReader srcReader, String params) {
+
+        if (srcReader != null) {
+            File tmpFile = createWriteTempFile(srcReader);
+            if (tmpFile != null) {
+                this.scriptMode = true;
+                return executeCommand(tmpFile.getAbsolutePath() + " " + params);
+            } else {
+                return new PowerShellResponse(true, "Cannot create temp script file!", false);
+            }
+        } else {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Script buffered reader is null!");
+            return new PowerShellResponse(true, "Script buffered reader is null!", false);
+        }
+
+    }
+
     // Writes a temp powershell script file based on the srcReader
     private File createWriteTempFile(BufferedReader srcReader) {
 
@@ -308,43 +344,6 @@ public class PowerShell implements AutoCloseable {
         }
 
         return tmpFile;
-    }
-
-
-    /**
-     * Execute the provided PowerShell script in PowerShell console and gets
-     * result.
-     *
-     * @param srcReader the script as BufferedReader (when loading File from jar)
-     * @return response with the output of the command
-     */
-    public PowerShellResponse executeScript(BufferedReader srcReader) {
-        return executeScript(srcReader, "");
-    }
-
-    /**
-     * Execute the provided PowerShell script in PowerShell console and gets
-     * result.
-     *
-     * @param srcReader the script as BufferedReader (when loading File from jar)
-     * @param params    the parameters of the script
-     * @return response with the output of the command
-     */
-    public PowerShellResponse executeScript(BufferedReader srcReader, String params) {
-
-        if (srcReader != null) {
-            File tmpFile = createWriteTempFile(srcReader);
-            if (tmpFile != null) {
-                this.scriptMode = true;
-                return executeCommand(tmpFile.getAbsolutePath() + " " + params);
-            } else {
-                return new PowerShellResponse(true, "Cannot create temp script file!", false);
-            }
-        } else {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Script buffered reader is null!");
-            return new PowerShellResponse(true, "Script buffered reader is null!", false);
-        }
-
     }
 
     /**
