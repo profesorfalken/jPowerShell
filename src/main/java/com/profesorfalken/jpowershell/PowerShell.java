@@ -52,7 +52,6 @@ public class PowerShell implements AutoCloseable {
     private static final String DEFAULT_LINUX_EXECUTABLE = "powershell";
 
     // Config values
-    private int maxThreads = 3;
     private int waitPause = 10;
     private long maxWait = 10000;
     private boolean remoteMode = false;
@@ -85,9 +84,6 @@ public class PowerShell implements AutoCloseable {
      */
     public PowerShell configuration(Map<String, String> config) {
         try {
-            this.maxThreads = Integer
-                    .valueOf((config != null && config.get("maxThreads") != null) ? config.get("maxThreads")
-                            : PowerShellConfig.getConfig().getProperty("maxThreads"));
             this.waitPause = Integer
                     .valueOf((config != null && config.get("waitPause") != null) ? config.get("waitPause")
                             : PowerShellConfig.getConfig().getProperty("waitPause"));
@@ -169,7 +165,7 @@ public class PowerShell implements AutoCloseable {
         this.commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(p.getOutputStream())), true);
 
         // Init thread pool. 2 threads are needed: one to write and read console and the other to close it
-        this.threadpool = Executors.newFixedThreadPool(this.maxThreads);
+        this.threadpool = Executors.newFixedThreadPool(2);
 
         return this;
     }
