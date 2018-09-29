@@ -516,6 +516,24 @@ public class PowerShellTest {
         }
     }
 
+    @Test (expected = java.util.concurrent.RejectedExecutionException.class)
+    public void testExecuteCommandAfterClose() throws Exception {
+        System.out.println("start testExecuteCommandAfterClose");
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = PowerShell.openSession();
+            PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+            System.out.println("Check BIOS:" + response.getCommandOutput());
+
+            Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
+
+            powerShell.close();
+
+            //Should throw a RejectedExecutionException
+            response = powerShell.executeCommand("Get-Process");
+        }
+
+    }
+
     /**
      * Test of configuration
      *
