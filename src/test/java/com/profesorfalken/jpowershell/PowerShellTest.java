@@ -1,7 +1,9 @@
 package com.profesorfalken.jpowershell;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.*;
 import java.util.Date;
@@ -18,6 +20,9 @@ import java.util.logging.Logger;
 public class PowerShellTest {
 
     private static final String CRLF = "\r\n";
+
+    @Rule
+    public final ExpectedException exception = ExpectedException.none();
 
     /**
      * Test of openSession method, of class PowerShell.
@@ -516,7 +521,7 @@ public class PowerShellTest {
         }
     }
 
-    @Test (expected = java.util.concurrent.RejectedExecutionException.class)
+    @Test
     public void testExecuteCommandAfterClose() throws Exception {
         System.out.println("start testExecuteCommandAfterClose");
         if (OSDetector.isWindows()) {
@@ -529,9 +534,9 @@ public class PowerShellTest {
             powerShell.close();
 
             //Should throw a RejectedExecutionException
-            response = powerShell.executeCommand("Get-Process");
+            exception.expect(java.util.concurrent.RejectedExecutionException.class);
+            powerShell.executeCommand("Get-Process");
         }
-
     }
 
     /**
