@@ -239,6 +239,34 @@ public class PowerShell implements AutoCloseable {
     }
 
     /**
+     * Allows to chain command executions providing a more fluent API.<p>
+     *
+     * This method allows also to optionally handle the response in a closure
+     *
+     * @param command the command to execute
+     * @param response optionally, the response can be handled in a closure
+     * @return The {@link PowerShell} instance
+     */
+    public PowerShell executeCommandAndChain(String command, ResponseHandler... response) {
+        PowerShellResponse powerShellResponse = executeCommand(command);
+
+        if (response.length > 0) {
+            handleResponse(response[0], powerShellResponse);
+        }
+
+        return this;
+    }
+
+    // Handle response in callback way
+    private void handleResponse(ResponseHandler response, PowerShellResponse powerShellResponse) {
+        try {
+            response.handle(powerShellResponse);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "PowerShell not available", ex);
+        }
+    }
+
+    /**
      * Executed the provided PowerShell script in PowerShell console and gets
      * result.
      *
