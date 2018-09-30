@@ -27,10 +27,9 @@ public class PowerShellTest {
     /**
      * Test of openSession method, of class PowerShell.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testListDir() throws Exception {
+    public void testListDir() {
         System.out.println("testListDir");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -48,10 +47,9 @@ public class PowerShellTest {
     /**
      * Test of openSession method, of class PowerShell.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testSimpleListDir() throws Exception {
+    public void testSimpleListDir() {
         System.out.println("start testListDir");
         if (OSDetector.isWindows()) {
             PowerShellResponse response = PowerShell.executeSingleCommand("dir");
@@ -66,10 +64,9 @@ public class PowerShellTest {
     /**
      * Test of openSession method, of class PowerShell.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testListProcesses() throws Exception {
+    public void testListProcesses() {
         System.out.println("testListProcesses");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -87,10 +84,9 @@ public class PowerShellTest {
     /**
      * Test of openSession method, of class PowerShell.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testCheckBIOSByWMI() throws Exception {
+    public void testCheckBIOSByWMI() {
         System.out.println("testCheckBIOSByWMI");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -107,10 +103,9 @@ public class PowerShellTest {
     /**
      * Test of empty response
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testCheckEmptyResponse() throws Exception {
+    public void testCheckEmptyResponse() {
         System.out.println("testCheckEmptyResponse");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -127,10 +122,9 @@ public class PowerShellTest {
     /**
      * Test of long command
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testLongCommand() throws Exception {
+    public void testLongCommand() {
         System.out.println("testLongCommand");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -148,10 +142,9 @@ public class PowerShellTest {
     /**
      * Test error case.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testErrorCase() throws Exception {
+    public void testErrorCase() {
         System.out.println("testErrorCase");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -168,10 +161,9 @@ public class PowerShellTest {
     /**
      * Test of openSession method, of class PowerShell.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testMultipleCalls() throws Exception {
+    public void testMultipleCalls() {
         System.out.println("testMultiple");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -196,10 +188,9 @@ public class PowerShellTest {
     /**
      * Test github example.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testExample() throws Exception {
+    public void testExample() {
         System.out.println("testExample");
         PowerShell powerShell = null;
         try {
@@ -234,10 +225,9 @@ public class PowerShellTest {
     /**
      * Test github example.
      *
-     * @throws java.lang.Exception
      */
     @Test (expected = Test.None.class /* no exception expected */)
-    public void testFunctionalExample() throws Exception {
+    public void testFunctionalExample() {
         System.out.println("testFunctionalExample");
         if (OSDetector.isWindows()) {
             PowerShell.openSession()
@@ -250,9 +240,8 @@ public class PowerShellTest {
     /**
      * Test other executable from default one
      *
-     * @throws java.lang.Exception
      */
-    public void testOtherExecutablePath() throws Exception {
+    public void testOtherExecutablePath() {
         PowerShell powerShell = null;
         if (OSDetector.isWindows()) {
             try {
@@ -273,10 +262,9 @@ public class PowerShellTest {
     /**
      * Test complex loop example.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testComplexLoop() throws Exception {
+    public void testComplexLoop() {
         System.out.println("testExample");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = null;
@@ -337,10 +325,9 @@ public class PowerShellTest {
     /**
      * Test loop.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testLoop() throws Exception {
+    public void testLoop() {
         System.out.println("testLoop");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = null;
@@ -369,10 +356,9 @@ public class PowerShellTest {
     /**
      * Test long loop.
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testLongLoop() throws Exception {
+    public void testLongLoop() {
         System.out.println("testLongLoop");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = null;
@@ -410,10 +396,9 @@ public class PowerShellTest {
     /**
      * Test of timeout
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testTimeout() throws Exception {
+    public void testTimeout() {
         System.out.println("testTimeout");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -432,7 +417,7 @@ public class PowerShellTest {
 
     //Activate only when having the right for remote execution
     //@Test
-    public void testRemote() throws Exception {
+    public void testRemote() {
         System.out.println("testRemote");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -546,7 +531,7 @@ public class PowerShellTest {
     }
 
     @Test
-    public void testExecuteCommandAfterClose() throws Exception {
+    public void testExecuteCommandAfterClose() {
         System.out.println("start testExecuteCommandAfterClose");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
@@ -566,10 +551,9 @@ public class PowerShellTest {
     /**
      * Test of configuration
      *
-     * @throws java.lang.Exception
      */
     @Test
-    public void testConfiguration() throws Exception {
+    public void testConfiguration() {
         System.out.println("testConfiguration");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
