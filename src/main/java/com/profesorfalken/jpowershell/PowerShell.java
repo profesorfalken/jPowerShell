@@ -57,7 +57,6 @@ public class PowerShell implements AutoCloseable {
     // Config values
     private int waitPause = 10;
     private long maxWait = 10000;
-    private boolean remoteMode = false;
 
     // Variables used for script mode
     private boolean scriptMode = false;
@@ -74,8 +73,6 @@ public class PowerShell implements AutoCloseable {
      * <p>
      * The values that can be overridden are:
      * <ul>
-     * <li>maxThreads: the maximum number of thread to use in pool. 3 is an optimal
-     * and default value</li>
      * <li>waitPause: the pause in ms between each loop pooling for a response.
      * Default value is 10</li>
      * <li>maxWait: the maximum wait in ms for the command to execute. Default value
@@ -92,9 +89,6 @@ public class PowerShell implements AutoCloseable {
                             : PowerShellConfig.getConfig().getProperty("waitPause"));
             this.maxWait = Long.valueOf((config != null && config.get("maxWait") != null) ? config.get("maxWait")
                     : PowerShellConfig.getConfig().getProperty("maxWait"));
-            this.remoteMode = Boolean
-                    .valueOf((config != null && config.get("remoteMode") != null) ? config.get("remoteMode")
-                            : PowerShellConfig.getConfig().getProperty("remoteMode"));
         } catch (NumberFormatException nfe) {
             logger.log(Level.SEVERE,
                     "Could not read configuration. Using default values.", nfe);
@@ -195,10 +189,6 @@ public class PowerShell implements AutoCloseable {
         Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(), this.maxWait,
                 this.waitPause, this.scriptMode);
         Future<String> result = threadpool.submit(commandProcessor);
-
-        if (this.remoteMode) {
-            command = completeRemoteCommand(command);
-        }
 
         // Launch command
         commandWriter.println(command);
@@ -453,10 +443,6 @@ public class PowerShell implements AutoCloseable {
             }
         }
         return closed;
-    }
-
-    private String completeRemoteCommand(String command) {
-        return command + ";Write-Output \"\"";
     }
 
     //Checks if PowerShell have been already closed

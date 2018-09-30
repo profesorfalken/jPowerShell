@@ -430,15 +430,13 @@ public class PowerShellTest {
         }
     }
 
-    // @Test
+    @Test
     public void testRemote() throws Exception {
         System.out.println("testRemote");
         if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
-            Map<String, String> config = new HashMap<>();
-            config.put("remoteMode", "true");
-            PowerShellResponse response = powerShell.configuration(config).executeCommand(
-                    "Invoke-command -ComputerName leon {(Get-Service W32Time).WaitForStatus('Running','02:00:00')}");
+            PowerShellResponse response = powerShell.executeCommand(
+                    "Invoke-command -ComputerName localhost {Write-Host \"Test from Remote\"}");
 
             System.out.println("Output:" + response.getCommandOutput());
 
