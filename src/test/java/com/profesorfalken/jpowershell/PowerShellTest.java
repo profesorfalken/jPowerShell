@@ -559,7 +559,7 @@ public class PowerShellTest {
             powerShell.close();
 
             //Should throw a RejectedExecutionException
-            exception.expect(java.util.concurrent.RejectedExecutionException.class);
+            exception.expect(IllegalStateException.class);
             powerShell.executeCommand("Get-Process");
         }
     }

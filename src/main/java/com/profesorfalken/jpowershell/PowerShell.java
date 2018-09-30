@@ -185,6 +185,8 @@ public class PowerShell implements AutoCloseable {
         boolean isError = false;
         boolean timeout = false;
 
+        checkState();
+
         Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(), this.maxWait,
                 this.waitPause, this.scriptMode);
         Future<String> result = threadpool.submit(commandProcessor);
@@ -434,5 +436,12 @@ public class PowerShell implements AutoCloseable {
 
     private String completeRemoteCommand(String command) {
         return command + ";Write-Output \"\"";
+    }
+
+    //Checks if PowerShell have been already closed
+    private void checkState() {
+        if (this.closed) {
+            throw new IllegalStateException("PowerShell is already closes. Please open a new session.");
+        }
     }
 }
