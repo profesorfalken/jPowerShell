@@ -430,7 +430,8 @@ public class PowerShellTest {
         }
     }
 
-    @Test
+    //Activate only when having the right for remote execution
+    //@Test
     public void testRemote() throws Exception {
         System.out.println("testRemote");
         if (OSDetector.isWindows()) {
