@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 public class PowerShell implements AutoCloseable {
 
     //Declare logger
-    private static Logger logger = Logger.getLogger(PowerShell.class.getName());
+    private static final Logger logger = Logger.getLogger(PowerShell.class.getName());
 
     // Process to store PowerShell session
     private Process p;
@@ -132,7 +132,7 @@ public class PowerShell implements AutoCloseable {
     // Initializes PowerShell console in which we will enter the commands
     private PowerShell initalize(String powerShellExecutablePath) throws PowerShellNotAvailableException {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
-        ProcessBuilder pb = null;
+        ProcessBuilder pb;
 
         //Start powershell executable in process
         if (OSDetector.isWindows()) {
@@ -186,7 +186,7 @@ public class PowerShell implements AutoCloseable {
 
         checkState();
 
-        Callable<String> commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(),
+        PowerShellCommandProcessor commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(),
                 this.waitPause, this.scriptMode);
         Future<String> result = threadpool.submit(commandProcessor);
 
@@ -199,6 +199,7 @@ public class PowerShell implements AutoCloseable {
                     commandOutput = result.get(maxWait, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException timeoutEx) {
                     timeout = true;
+                    isError = true;
                     //Interrupt command after timeout
                     result.cancel(true);
                 }
@@ -206,10 +207,11 @@ public class PowerShell implements AutoCloseable {
         } catch (InterruptedException | ExecutionException ex) {
             logger.log(Level.SEVERE,
                     "Unexpected error when processing PowerShell command", ex);
+            isError = true;
         } finally {
             // issue #2. Close and cancel processors/threads - Thanks to r4lly
             // for helping me here
-            ((PowerShellCommandProcessor) commandProcessor).close();
+            commandProcessor.close();
         }
 
         return new PowerShellResponse(isError, commandOutput, timeout);
@@ -267,14 +269,14 @@ public class PowerShell implements AutoCloseable {
      * @return boolean
      */
     public boolean isLastCommandInError() {
-        return !Boolean.valueOf(executeCommand("$?").getCommandOutput()).booleanValue();
+        return !Boolean.valueOf(executeCommand("$?").getCommandOutput());
     }
 
     /**
      * Executed the provided PowerShell script in PowerShell console and gets
      * result.
      *
-     * @param scriptPath the full paht of the script
+     * @param scriptPath the full path of the script
      * @return response with the output of the command
      */
     public PowerShellResponse executeScript(String scriptPath) {
@@ -289,8 +291,9 @@ public class PowerShell implements AutoCloseable {
      * @param params     the parameters of the script
      * @return response with the output of the command
      */
+    @SuppressWarnings("WeakerAccess")
     public PowerShellResponse executeScript(String scriptPath, String params) {
-        BufferedReader srcReader = null;
+        BufferedReader srcReader;
 
         try {
             srcReader = new BufferedReader(new FileReader(new File(scriptPath)));
@@ -322,6 +325,7 @@ public class PowerShell implements AutoCloseable {
      * @param params    the parameters of the script
      * @return response with the output of the command
      */
+    @SuppressWarnings("WeakerAccess")
     public PowerShellResponse executeScript(BufferedReader srcReader, String params) {
 
         if (srcReader != null) {

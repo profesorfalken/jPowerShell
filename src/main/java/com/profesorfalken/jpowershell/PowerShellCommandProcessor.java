@@ -37,7 +37,7 @@ class PowerShellCommandProcessor implements Callable<String> {
 
     private boolean closed = false;
 
-    private boolean scriptMode = false;
+    private final boolean scriptMode;
 
     private final int waitPause;
 
@@ -60,9 +60,9 @@ class PowerShellCommandProcessor implements Callable<String> {
      * Calls the command and returns its output
      *
      * @return String output of call
-     * @throws IOException error when reading data
+     * @throws InterruptedException error when reading data
      */
-    public String call() throws IOException, InterruptedException {
+    public String call() throws InterruptedException {
         StringBuilder powerShellOutput = new StringBuilder();
 
         try {
