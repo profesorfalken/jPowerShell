@@ -265,6 +265,15 @@ public class PowerShell implements AutoCloseable {
     }
 
     /**
+     * Indicates if the last executed command finished in error
+     *
+     * @return boolean
+     */
+    public boolean isLastCommandInError() {
+        return !Boolean.valueOf(executeCommand("$?").getCommandOutput().trim()).booleanValue();
+    }
+
+    /**
      * Executed the provided PowerShell script in PowerShell console and gets
      * result.
      *
