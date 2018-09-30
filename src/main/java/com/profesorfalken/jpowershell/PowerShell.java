@@ -165,7 +165,7 @@ public class PowerShell implements AutoCloseable {
         this.threadpool = Executors.newFixedThreadPool(2);
 
         //Get and store the PID of the process
-        this.pid = Long.valueOf(executeCommand("$pid").getCommandOutput().trim());
+        this.pid = Long.valueOf(executeCommand("$pid").getCommandOutput());
 
         return this;
     }
@@ -267,7 +267,7 @@ public class PowerShell implements AutoCloseable {
      * @return boolean
      */
     public boolean isLastCommandInError() {
-        return !Boolean.valueOf(executeCommand("$?").getCommandOutput().trim()).booleanValue();
+        return !Boolean.valueOf(executeCommand("$?").getCommandOutput()).booleanValue();
     }
 
     /**
