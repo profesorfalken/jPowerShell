@@ -17,8 +17,6 @@ package com.profesorfalken.jpowershell;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -247,7 +245,7 @@ public class PowerShell implements AutoCloseable {
      * @param response optionally, the response can be handled in a closure
      * @return The {@link PowerShell} instance
      */
-    public PowerShell executeCommandAndChain(String command, ResponseHandler... response) {
+    public PowerShell executeCommandAndChain(String command, PowerShellResponseHandler... response) {
         PowerShellResponse powerShellResponse = executeCommand(command);
 
         if (response.length > 0) {
@@ -258,7 +256,7 @@ public class PowerShell implements AutoCloseable {
     }
 
     // Handle response in callback way
-    private void handleResponse(ResponseHandler response, PowerShellResponse powerShellResponse) {
+    private void handleResponse(PowerShellResponseHandler response, PowerShellResponse powerShellResponse) {
         try {
             response.handle(powerShellResponse);
         } catch (Exception ex) {
