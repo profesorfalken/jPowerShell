@@ -39,7 +39,6 @@ class PowerShellCommandProcessor implements Callable<String> {
 
     private boolean scriptMode = false;
 
-    private final long maxWait;
     private final int waitPause;
 
     /**
@@ -47,14 +46,12 @@ class PowerShellCommandProcessor implements Callable<String> {
      *
      * @param name        the name of the CommandProcessor
      * @param inputStream the stream needed to read the command output
-     * @param maxWait     long the max wait time in milliseconds
      * @param waitPause   long the wait pause in milliseconds
      * @param scriptMode  boolean indicates if the command executes a script
      */
-    public PowerShellCommandProcessor(String name, InputStream inputStream, long maxWait, int waitPause, boolean scriptMode) {
+    public PowerShellCommandProcessor(String name, InputStream inputStream, int waitPause, boolean scriptMode) {
         this.reader = new BufferedReader(new InputStreamReader(
                 inputStream));
-        this.maxWait = maxWait;
         this.waitPause = waitPause;
         this.scriptMode = scriptMode;
     }
