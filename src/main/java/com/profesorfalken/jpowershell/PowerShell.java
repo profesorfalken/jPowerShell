@@ -139,7 +139,7 @@ public class PowerShell implements AutoCloseable {
             pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", powerShellExecutablePath,
                     "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
         } else {
-            pb =  new ProcessBuilder(powerShellExecutablePath,"-nologo","-noexit","-Command", "-");
+            pb = new ProcessBuilder(powerShellExecutablePath, "-nologo", "-noexit", "-Command", "-");
         }
 
         //Merge standard and error streams
@@ -226,7 +226,7 @@ public class PowerShell implements AutoCloseable {
     public static PowerShellResponse executeSingleCommand(String command) {
         PowerShellResponse response = null;
 
-        try (PowerShell session = PowerShell.openSession()){
+        try (PowerShell session = PowerShell.openSession()) {
             response = session.executeCommand(command);
         } catch (PowerShellNotAvailableException ex) {
             logger.log(Level.SEVERE, "PowerShell not available", ex);
@@ -237,10 +237,10 @@ public class PowerShell implements AutoCloseable {
 
     /**
      * Allows to chain command executions providing a more fluent API.<p>
-     *
+     * <p>
      * This method allows also to optionally handle the response in a closure
      *
-     * @param command the command to execute
+     * @param command  the command to execute
      * @param response optionally, the response can be handled in a closure
      * @return The {@link PowerShell} instance
      */
@@ -397,13 +397,13 @@ public class PowerShell implements AutoCloseable {
                     //If it can be closed, force kill the process
                     Logger.getLogger(PowerShell.class.getName()).log(Level.INFO,
                             "Forcing PowerShell to close. PID: " + this.pid);
-					try {
-						Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
-						this.closed = true;
-					} catch (IOException e) {
-						Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
-								"Unexpected error while killing powershell process", e);
-					}
+                    try {
+                        Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
+                        this.closed = true;
+                    } catch (IOException e) {
+                        Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                                "Unexpected error while killing powershell process", e);
+                    }
                 }
             } catch (InterruptedException | ExecutionException ex) {
                 logger.log(Level.SEVERE,

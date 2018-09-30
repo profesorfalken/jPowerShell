@@ -16,12 +16,12 @@
 package com.profesorfalken.jpowershell;
 
 /**
- * Custom checked exception produced when the Powershell executable cannot 
+ * Custom checked exception produced when the Powershell executable cannot
  * be found
- * 
+ *
  * @author Javier Garcia Alonso
  */
-public class PowerShellNotAvailableException extends RuntimeException{
+public class PowerShellNotAvailableException extends RuntimeException {
 
     PowerShellNotAvailableException(String message) {
         super(message);

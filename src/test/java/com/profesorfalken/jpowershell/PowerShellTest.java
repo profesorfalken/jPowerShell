@@ -26,7 +26,6 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
-     *
      */
     @Test
     public void testListDir() {
@@ -46,7 +45,6 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
-     *
      */
     @Test
     public void testSimpleListDir() {
@@ -63,7 +61,6 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
-     *
      */
     @Test
     public void testListProcesses() {
@@ -83,7 +80,6 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
-     *
      */
     @Test
     public void testCheckBIOSByWMI() {
@@ -102,7 +98,6 @@ public class PowerShellTest {
 
     /**
      * Test of empty response
-     *
      */
     @Test
     public void testCheckEmptyResponse() {
@@ -121,7 +116,6 @@ public class PowerShellTest {
 
     /**
      * Test of long command
-     *
      */
     @Test
     public void testLongCommand() {
@@ -141,7 +135,6 @@ public class PowerShellTest {
 
     /**
      * Test error case.
-     *
      */
     @Test
     public void testErrorCase() {
@@ -160,7 +153,6 @@ public class PowerShellTest {
 
     /**
      * Test of openSession method, of class PowerShell.
-     *
      */
     @Test
     public void testMultipleCalls() {
@@ -187,7 +179,6 @@ public class PowerShellTest {
 
     /**
      * Test github example.
-     *
      */
     @Test
     public void testExample() {
@@ -224,9 +215,8 @@ public class PowerShellTest {
 
     /**
      * Test github example.
-     *
      */
-    @Test (expected = Test.None.class /* no exception expected */)
+    @Test(expected = Test.None.class /* no exception expected */)
     public void testFunctionalExample() {
         System.out.println("testFunctionalExample");
         if (OSDetector.isWindows()) {
@@ -239,7 +229,6 @@ public class PowerShellTest {
 
     /**
      * Test other executable from default one
-     *
      */
     public void testOtherExecutablePath() {
         PowerShell powerShell = null;
@@ -261,7 +250,6 @@ public class PowerShellTest {
 
     /**
      * Test complex loop example.
-     *
      */
     @Test
     public void testComplexLoop() {
@@ -324,7 +312,6 @@ public class PowerShellTest {
 
     /**
      * Test loop.
-     *
      */
     @Test
     public void testLoop() {
@@ -355,7 +342,6 @@ public class PowerShellTest {
 
     /**
      * Test long loop.
-     *
      */
     @Test
     public void testLongLoop() {
@@ -395,7 +381,6 @@ public class PowerShellTest {
 
     /**
      * Test of timeout
-     *
      */
     @Test
     public void testTimeout() {
@@ -550,7 +535,6 @@ public class PowerShellTest {
 
     /**
      * Test of configuration
-     *
      */
     @Test
     public void testConfiguration() {

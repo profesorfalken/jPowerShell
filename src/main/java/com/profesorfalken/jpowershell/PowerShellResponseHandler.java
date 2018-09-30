@@ -16,9 +16,9 @@
 package com.profesorfalken.jpowershell;
 
 /**
- * Allows to handle the response using a callback logic. Uses @FunctionalInterface 
+ * Allows to handle the response using a callback logic. Uses @FunctionalInterface
  * annotation in order to be supported by Java 8+ closures
- * 
+ *
  * @author Javier Garcia Alonso
  */
 @FunctionalInterface
