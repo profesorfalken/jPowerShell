@@ -41,6 +41,8 @@ public class PowerShell implements AutoCloseable {
 
     // Process to store PowerShell session
     private Process p;
+    //PID of the process
+    private long pid;
     // Writer to send commands
     private PrintWriter commandWriter;
 
@@ -167,6 +169,9 @@ public class PowerShell implements AutoCloseable {
 
         // Init thread pool. 2 threads are needed: one to write and read console and the other to close it
         this.threadpool = Executors.newFixedThreadPool(2);
+
+        //Get and store the PID of the process
+        this.pid = Long.valueOf(executeCommand("$pid").getCommandOutput().trim());
 
         return this;
     }
@@ -394,14 +399,27 @@ public class PowerShell implements AutoCloseable {
                     p.waitFor();
                     return "OK";
                 });
-                waitUntilClose(closeTask);
+                if (!closeAndWait(closeTask)) {
+                    //If it can be closed, force kill the process
+                    Logger.getLogger(PowerShell.class.getName()).log(Level.INFO,
+                            "Forcing PowerShell to close. PID: " + this.pid);
+					try {
+						Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
+						this.closed = true;
+					} catch (IOException e) {
+						Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+								"Unexpected error while killing powershell process", e);
+					}
+                }
             } catch (InterruptedException | ExecutionException ex) {
                 logger.log(Level.SEVERE,
                         "Unexpected error when when closing PowerShell", ex);
             } finally {
                 commandWriter.close();
                 try {
-                    p.getInputStream().close();
+                    if (p.isAlive()) {
+                        p.getInputStream().close();
+                    }
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE,
                             "Unexpected error when when closing streams", ex);
@@ -412,7 +430,7 @@ public class PowerShell implements AutoCloseable {
                         this.threadpool.awaitTermination(5, TimeUnit.SECONDS);
                     } catch (InterruptedException ex) {
                         logger.log(Level.SEVERE,
-                                "Unexpected error when when shutting thread pool", ex);
+                                "Unexpected error when when shutting down thread pool", ex);
                     }
 
                 }
@@ -421,17 +439,20 @@ public class PowerShell implements AutoCloseable {
         }
     }
 
-    private void waitUntilClose(Future<String> task) throws InterruptedException, ExecutionException {
+    private boolean closeAndWait(Future<String> task) throws InterruptedException, ExecutionException {
+        boolean closed = true;
         if (!task.isDone()) {
             try {
                 task.get(maxWait, TimeUnit.MILLISECONDS);
             } catch (TimeoutException timeoutEx) {
-                logger.log(Level.SEVERE,
-                        "Unexpected error when closing PowerShell: TIMEOUT!");
+                logger.log(Level.WARNING,
+                        "Powershell process cannot be closed. Session seems to be blocked");
                 //Interrupt command after timeout
                 task.cancel(true);
+                closed = false;
             }
         }
+        return closed;
     }
 
     private String completeRemoteCommand(String command) {
