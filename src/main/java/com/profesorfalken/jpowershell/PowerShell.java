@@ -325,22 +325,23 @@ public class PowerShell implements AutoCloseable {
      * @param params    the parameters of the script
      * @return response with the output of the command
      */
-    @SuppressWarnings("WeakerAccess")
     public PowerShellResponse executeScript(BufferedReader srcReader, String params) {
-
+        PowerShellResponse response;
         if (srcReader != null) {
             File tmpFile = createWriteTempFile(srcReader);
             if (tmpFile != null) {
                 this.scriptMode = true;
-                return executeCommand(tmpFile.getAbsolutePath() + " " + params);
+                response = executeCommand(tmpFile.getAbsolutePath() + " " + params);
+                tmpFile.delete();
             } else {
-                return new PowerShellResponse(true, "Cannot create temp script file!", false);
+                response = new PowerShellResponse(true, "Cannot create temp script file!", false);
             }
         } else {
             logger.log(Level.SEVERE, "Script buffered reader is null!");
-            return new PowerShellResponse(true, "Script buffered reader is null!", false);
+            response = new PowerShellResponse(true, "Script buffered reader is null!", false);
         }
 
+        return response;
     }
 
     // Writes a temp powershell script file based on the srcReader
