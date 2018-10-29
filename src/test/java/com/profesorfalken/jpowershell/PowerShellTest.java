@@ -562,16 +562,17 @@ public class PowerShellTest {
     @Test
     public void testScriptWithArgs() throws Exception {
         System.out.println("testScriptWithArgs");
-        if (!OSDetector.isWindows()) {
+        if (OSDetector.isWindows()) {
             PowerShell powerShell = PowerShell.openSession();
             Map<String, String> config = new HashMap<>();
             PowerShellResponse response = null;
 
             StringBuilder scriptContent = new StringBuilder();
-            scriptContent.append("args[0]").append(CRLF);
+            scriptContent.append("Param([string]$computerName)").append(CRLF);
+            scriptContent.append("$computerName").append(CRLF);
 
             try {
-                response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()), "helloworld");
+                response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()), "–computerName SERVER1");
             } finally {
                 powerShell.close();
             }
@@ -581,8 +582,10 @@ public class PowerShellTest {
                 Assert.assertFalse("Is in error!", response.isError());
                 Assert.assertFalse("Is timeout!", response.isTimeout());
             }
-            Assert.assertTrue(response.getCommandOutput().contains("helloworld"));
+
+            Assert.assertTrue(response.getCommandOutput().contains("SERVER1"));
             System.out.println(response.getCommandOutput());
+
         }
     }
 
