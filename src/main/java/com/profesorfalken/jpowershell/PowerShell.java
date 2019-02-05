@@ -42,7 +42,7 @@ public class PowerShell implements AutoCloseable {
     // Process to store PowerShell session
     private Process p;
     //PID of the process
-    private long pid;
+    private long pid = -1;
     // Writer to send commands
     private PrintWriter commandWriter;
 
@@ -165,10 +165,11 @@ public class PowerShell implements AutoCloseable {
         this.threadpool = Executors.newFixedThreadPool(2);
 
         //Get and store the PID of the process
-        this.pid = Long.valueOf(executeCommand("$pid").getCommandOutput());
+        this.pid = getPID();
 
         return this;
     }
+
 
     /**
      * Execute a PowerShell command.
@@ -394,7 +395,7 @@ public class PowerShell implements AutoCloseable {
                     p.waitFor();
                     return "OK";
                 });
-                if (!closeAndWait(closeTask)) {
+                if (!closeAndWait(closeTask) && this.pid > 0) {
                     //If it can be closed, force kill the process
                     Logger.getLogger(PowerShell.class.getName()).log(Level.INFO,
                             "Forcing PowerShell to close. PID: " + this.pid);
@@ -455,5 +456,19 @@ public class PowerShell implements AutoCloseable {
         if (this.closed) {
             throw new IllegalStateException("PowerShell is already closes. Please open a new session.");
         }
+    }
+
+    //Use Powershell command '$PID' in order to recover the process identifier
+    private long getPID() {
+        String commandOutput = executeCommand("$pid").getCommandOutput();
+
+        //Remove all non numeric characters
+        commandOutput = commandOutput.replaceAll("\\D", "");
+
+        if (!commandOutput.isEmpty()) {
+            return Long.valueOf(commandOutput);
+        }
+
+        return -1;
     }
 }
