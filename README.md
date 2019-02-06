@@ -21,18 +21,18 @@ Check all the new features here: https://github.com/profesorfalken/jPowerShell/w
 
 ## Installation
 
-To install jPowerShell you can add the dependecy to your software project management tool: https://search.maven.org/artifact/com.profesorfalken/jPowerShell/3.0.1/jar
+To install jPowerShell you can add the dependecy to your software project management tool: https://search.maven.org/artifact/com.profesorfalken/jPowerShell/3.0.3/jar
 
 For example, for Maven you have just to add to your pom.xml:
 
       <dependency>
         <groupId>com.profesorfalken</groupId>
         <artifactId>jPowerShell</artifactId>
-        <version>3.0.1</version>
+        <version>3.0.3</version>
       </dependency>
 
 Instead, you can direct download the JAR file and add it to your classpath. 
-https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/3.0.1/jPowerShell-3.0.1.jar
+https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/3.0.3/jPowerShell-3.0.3.jar
 
 ## Basic Usage
 
