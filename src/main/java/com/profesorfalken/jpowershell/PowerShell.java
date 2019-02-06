@@ -457,7 +457,7 @@ public class PowerShell implements AutoCloseable {
     //Checks if PowerShell have been already closed
     private void checkState() {
         if (this.closed) {
-            throw new IllegalStateException("PowerShell is already closes. Please open a new session.");
+            throw new IllegalStateException("PowerShell is already closed. Please open a new session.");
         }
     }
 
