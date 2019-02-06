@@ -589,6 +589,22 @@ public class PowerShellTest {
         }
     }
 
+    /**
+     * Test of openSession method, of class PowerShell.
+     */
+    @Test
+    public void testSOQuestion() {
+        System.out.println("testSOQuestion");
+        if (OSDetector.isWindows()) {
+            String command = "Get-ItemProperty " +
+                    "HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* " +
+                    "| Select-Object DisplayName, DisplayVersion, Publisher, InstallDate " +
+                    "| Format-Table –AutoSize";
+
+            System.out.println(PowerShell.executeSingleCommand(command).getCommandOutput());
+        }
+    }
+
     private static String generateScript(String scriptContent) throws Exception {
         File tmpFile = null;
         FileWriter writer = null;
