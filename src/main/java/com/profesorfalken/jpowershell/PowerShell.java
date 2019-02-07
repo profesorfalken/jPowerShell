@@ -137,7 +137,7 @@ public class PowerShell implements AutoCloseable {
         //Start powershell executable in process
         if (OSDetector.isWindows()) {
             pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", powerShellExecutablePath,
-                    "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
+                    "-ExecutionPolicy", "Bypass", "-NoExit", "-NoProfile", "-Command", "-");
         } else {
             pb = new ProcessBuilder(powerShellExecutablePath, "-nologo", "-noexit", "-Command", "-");
         }
@@ -163,9 +163,6 @@ public class PowerShell implements AutoCloseable {
 
         // Init thread pool. 2 threads are needed: one to write and read console and the other to close it
         this.threadpool = Executors.newFixedThreadPool(2);
-
-        //Clean output stream to avoid init profile messages
-        clearOutput();
 
         //Get and store the PID of the process
         this.pid = getPID();
@@ -473,10 +470,5 @@ public class PowerShell implements AutoCloseable {
         }
 
         return -1;
-    }
-
-    //Call null command in order to clear the output stream
-    private void clearOutput() {
-        executeCommand("$null").getCommandOutput();
     }
 }
