@@ -121,12 +121,14 @@ public class PowerShellTest {
     public void testLongCommand() {
         System.out.println("testLongCommand");
         if (OSDetector.isWindows()) {
+            Map<String, String> config = new HashMap<>();
+            config.put("maxWait","30000");
             PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell
+            PowerShellResponse response = powerShell.configuration(config)
                     .executeCommand("Get-WMIObject -List | Where{$_.name -match \"^Win32_\"} | Sort Name");
             System.out.println("Long list:" + response.getCommandOutput());
 
-            Assert.assertFalse(powerShell.isLastCommandInError());
+            Assert.assertFalse(powerShell.configuration(config).isLastCommandInError());
             Assert.assertTrue(response.getCommandOutput().length() > 1000);
 
             powerShell.close();

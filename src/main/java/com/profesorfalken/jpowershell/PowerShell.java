@@ -62,6 +62,8 @@ public class PowerShell implements AutoCloseable {
     private boolean scriptMode = false;
     public static final String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
 
+    private String tempDirectory;
+
     // Private constructor. Instance using openSession method
     private PowerShell() {
     }
@@ -89,6 +91,7 @@ public class PowerShell implements AutoCloseable {
                             : PowerShellConfig.getConfig().getProperty("waitPause"));
             this.maxWait = Long.valueOf((config != null && config.get("maxWait") != null) ? config.get("maxWait")
                     : PowerShellConfig.getConfig().getProperty("maxWait"));
+            this.tempDirectory = (config != null && config.get("tempDirectory") != null) ? ((String)config.get("tempDirectory")) : null;
         } catch (NumberFormatException nfe) {
             logger.log(Level.SEVERE,
                     "Could not read configuration. Using default values.", nfe);
@@ -350,9 +353,12 @@ public class PowerShell implements AutoCloseable {
 
         BufferedWriter tmpWriter = null;
         File tmpFile = null;
+        File dir = null;
+        if(null != tempDirectory)
+            dir = new File(tempDirectory);
 
         try {
-            tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1");
+            tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1",dir);
             if (!tmpFile.exists()) {
                 return null;
             }
