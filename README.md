@@ -13,7 +13,7 @@ Simple Java API that allows to interact with PowerShell console
               .close();
 ```
 
-#### New JPowerShell v3.0 is out
+#### New JPowerShell v3 is out
 
 The version 3 of JPowerShell includes an important revision and rewrite of most of the code that improves performance and stability.
 
@@ -102,6 +102,9 @@ The variables that can be configured in jPowerShell are:
 *waitPause*: the pause in ms between each loop pooling for a response. Default value is 10
 
 *maxWait*: the maximum wait in ms for the command to execute. Default value is 10000
+
+*tempFolder*: if you set this variable jPowerShell will use this folder in order to store temporary the scripts to execute.
+By default the environment variable _java.io.tmpdir_ will be used.
 
 ## Advanced usage
 

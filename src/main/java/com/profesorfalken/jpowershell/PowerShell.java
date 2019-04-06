@@ -55,8 +55,9 @@ public class PowerShell implements AutoCloseable {
     private static final String DEFAULT_LINUX_EXECUTABLE = "powershell";
 
     // Config values
-    private int waitPause = 10;
+    private int waitPause = 5;
     private long maxWait = 10000;
+    private File tempFolder = null;
 
     // Variables used for script mode
     private boolean scriptMode = false;
@@ -89,6 +90,8 @@ public class PowerShell implements AutoCloseable {
                             : PowerShellConfig.getConfig().getProperty("waitPause"));
             this.maxWait = Long.valueOf((config != null && config.get("maxWait") != null) ? config.get("maxWait")
                     : PowerShellConfig.getConfig().getProperty("maxWait"));
+            this.tempFolder = (config != null && config.get("tempFolder") != null) ? getTempFolder(config.get("tempFolder"))
+                    : getTempFolder(PowerShellConfig.getConfig().getProperty("tempFolder"));
         } catch (NumberFormatException nfe) {
             logger.log(Level.SEVERE,
                     "Could not read configuration. Using default values.", nfe);
@@ -352,7 +355,7 @@ public class PowerShell implements AutoCloseable {
         File tmpFile = null;
 
         try {
-            tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1");
+            tmpFile = File.createTempFile("psscript_" + new Date().getTime(), ".ps1", this.tempFolder);
             if (!tmpFile.exists()) {
                 return null;
             }
@@ -470,5 +473,16 @@ public class PowerShell implements AutoCloseable {
         }
 
         return -1;
+    }
+
+    //Return the temp folder File object or null if the path does not exist
+    private File getTempFolder(String tempPath) {
+        if (tempPath != null) {
+            File folder = new File(tempPath);
+            if (folder.exists()) {
+                return folder;
+            }
+        }
+        return null;
     }
 }
