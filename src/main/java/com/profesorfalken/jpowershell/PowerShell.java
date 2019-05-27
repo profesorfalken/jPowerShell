@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Javier Garcia Alonso.
+ * Copyright 2016-2019 Javier Garcia Alonso.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -222,7 +222,7 @@ public class PowerShell implements AutoCloseable {
     }
 
     /**
-     * Execute a single command in PowerShell console and gets result
+     * Execute a single command in PowerShell consolscriptModee and gets result
      *
      * @param command the command to execute
      * @return response with the output of the command
@@ -297,17 +297,17 @@ public class PowerShell implements AutoCloseable {
      */
     @SuppressWarnings("WeakerAccess")
     public PowerShellResponse executeScript(String scriptPath, String params) {
-        BufferedReader srcReader;
-
-        try {
-            srcReader = new BufferedReader(new FileReader(new File(scriptPath)));
+        try (BufferedReader srcReader = new BufferedReader(new FileReader(new File(scriptPath)))) {
+            return executeScript(srcReader, params);
         } catch (FileNotFoundException fnfex) {
             logger.log(Level.SEVERE,
                     "Unexpected error when processing PowerShell script: file not found", fnfex);
             return new PowerShellResponse(true, "Wrong script path: " + scriptPath, false);
+        } catch (IOException ioe) {
+            logger.log(Level.SEVERE,
+                    "Unexpected error when processing PowerShell script", ioe);
+            return new PowerShellResponse(true, "IO error reading: " + scriptPath, false);
         }
-
-        return executeScript(srcReader, params);
     }
 
     /**
@@ -336,6 +336,7 @@ public class PowerShell implements AutoCloseable {
             if (tmpFile != null) {
                 this.scriptMode = true;
                 response = executeCommand(tmpFile.getAbsolutePath() + " " + params);
+                this.scriptMode = false;
                 tmpFile.delete();
             } else {
                 response = new PowerShellResponse(true, "Cannot create temp script file!", false);

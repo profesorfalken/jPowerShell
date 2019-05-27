@@ -605,6 +605,39 @@ public class PowerShellTest {
         }
     }
 
+    /**
+     * Test command after script execution
+     */
+    @Test
+    public void testCommandAfterScript() throws Exception {
+        if (OSDetector.isWindows()) {
+            PowerShell powerShell = PowerShell.openSession();
+            Map<String, String> config = new HashMap<>();
+            PowerShellResponse response = null;
+
+            StringBuilder scriptContent = new StringBuilder();
+            scriptContent.append("Write-Host \"First message\"").append(CRLF);
+            response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()));
+
+            Assert.assertNotNull("Response null!", response);
+            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+                Assert.assertFalse("Is in error!", response.isError());
+                Assert.assertFalse("Is timeout!", response.isTimeout());
+            }
+            System.out.println(response.getCommandOutput());
+
+            //Execute command after script
+            response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+            System.out.println("Check BIOS:" + response.getCommandOutput());
+
+            Assert.assertFalse("Is timeout!", response.isTimeout());
+            Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
+
+            powerShell.close();
+        }
+
+    }
+
     private static String generateScript(String scriptContent) throws Exception {
         File tmpFile = null;
         FileWriter writer = null;
