@@ -22,6 +22,6 @@ package com.profesorfalken.jpowershell;
  * @author Javier Garcia Alonso
  */
 @FunctionalInterface
-interface PowerShellResponseHandler {
+public interface PowerShellResponseHandler {
     void handle(PowerShellResponse response);
 }
