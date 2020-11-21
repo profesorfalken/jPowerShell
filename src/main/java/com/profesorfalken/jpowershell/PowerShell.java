@@ -41,6 +41,7 @@ public class PowerShell implements AutoCloseable {
 
     // Process to store PowerShell session
     private Process p;
+    private ProcessBuilder pb;
     //PID of the process
     private long pid = -1;
     // Writer to send commands
@@ -58,7 +59,8 @@ public class PowerShell implements AutoCloseable {
     private int waitPause = 5;
     private long maxWait = 10000;
     private File tempFolder = null;
-
+    private File workingDirectory = null;
+    
     // Variables used for script mode
     private boolean scriptMode = false;
     public static final String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
@@ -92,6 +94,8 @@ public class PowerShell implements AutoCloseable {
                     : PowerShellConfig.getConfig().getProperty("maxWait"));
             this.tempFolder = (config != null && config.get("tempFolder") != null) ? getTempFolder(config.get("tempFolder"))
                     : getTempFolder(PowerShellConfig.getConfig().getProperty("tempFolder"));
+            this.workingDirectory = (config != null && config.get("workingDirectory") != null) ? getTempFolder(config.get("workingDirectory"))
+                    : getTempFolder(PowerShellConfig.getConfig().getProperty("workingDirectory"));
         } catch (NumberFormatException nfe) {
             logger.log(Level.SEVERE,
                     "Could not read configuration. Using default values.", nfe);
@@ -132,10 +136,14 @@ public class PowerShell implements AutoCloseable {
         return powerShell.initalize(powerShellExecutablePath);
     }
 
+    private void setWorkingDirectory(File directory){
+        pb.directory(directory);
+    }
+    
     // Initializes PowerShell console in which we will enter the commands
     private PowerShell initalize(String powerShellExecutablePath) throws PowerShellNotAvailableException {
         String codePage = PowerShellCodepage.getIdentifierByCodePageName(Charset.defaultCharset().name());
-        ProcessBuilder pb;
+        
 
         //Start powershell executable in process
         if (OSDetector.isWindows()) {
@@ -188,6 +196,7 @@ public class PowerShell implements AutoCloseable {
         boolean isError = false;
         boolean timeout = false;
 
+        this.setWorkingDirectory(workingDirectory);
         checkState();
 
         PowerShellCommandProcessor commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(),
