@@ -1,6 +1,7 @@
 package com.profesorfalken.jpowershell;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -30,17 +31,16 @@ public class PowerShellTest {
     @Test
     public void testListDir() {
         System.out.println("testListDir");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell.executeCommand("dir");
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("dir");
 
-            System.out.println("List Directory:" + response.getCommandOutput());
+        System.out.println("List Directory:" + response.getCommandOutput());
 
-            Assert.assertFalse(powerShell.isLastCommandInError());
-            Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
+        Assert.assertFalse(powerShell.isLastCommandInError());
+        Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
 
-            powerShell.close();
-        }
+        powerShell.close();
     }
 
     /**
@@ -49,14 +49,13 @@ public class PowerShellTest {
     @Test
     public void testSimpleListDir() {
         System.out.println("start testListDir");
-        if (OSDetector.isWindows()) {
-            PowerShellResponse response = PowerShell.executeSingleCommand("dir");
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShellResponse response = PowerShell.executeSingleCommand("dir");
 
-            System.out.println("List Directory:" + response.getCommandOutput());
+        System.out.println("List Directory:" + response.getCommandOutput());
 
-            Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
-            System.out.println("end testListDir");
-        }
+        Assert.assertTrue(response.getCommandOutput().contains("LastWriteTime"));
+        System.out.println("end testListDir");
     }
 
     /**
@@ -65,17 +64,16 @@ public class PowerShellTest {
     @Test
     public void testListProcesses() {
         System.out.println("testListProcesses");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell.executeCommand("Get-Process");
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("Get-Process");
 
-            System.out.println("List Processes:" + response.getCommandOutput());
+        System.out.println("List Processes:" + response.getCommandOutput());
 
-            Assert.assertFalse(powerShell.isLastCommandInError());
-            Assert.assertTrue(response.getCommandOutput().contains("powershell"));
+        Assert.assertFalse(powerShell.isLastCommandInError());
+        Assert.assertTrue(response.getCommandOutput().contains("powershell"));
 
-            powerShell.close();
-        }
+        powerShell.close();
     }
 
     /**
@@ -84,16 +82,15 @@ public class PowerShellTest {
     @Test
     public void testCheckBIOSByWMI() {
         System.out.println("testCheckBIOSByWMI");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
-            System.out.println("Check BIOS:" + response.getCommandOutput());
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+        System.out.println("Check BIOS:" + response.getCommandOutput());
 
-            Assert.assertFalse(powerShell.isLastCommandInError());
-            Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
+        Assert.assertFalse(powerShell.isLastCommandInError());
+        Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
 
-            powerShell.close();
-        }
+        powerShell.close();
     }
 
     /**
@@ -102,16 +99,15 @@ public class PowerShellTest {
     @Test
     public void testCheckEmptyResponse() {
         System.out.println("testCheckEmptyResponse");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_1394Controller");
-            System.out.println("Empty response:" + response.getCommandOutput());
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_1394Controller");
+        System.out.println("Empty response:" + response.getCommandOutput());
 
-            Assert.assertFalse(powerShell.isLastCommandInError());
-            Assert.assertTrue("".equals(response.getCommandOutput()));
+        Assert.assertFalse(powerShell.isLastCommandInError());
+        Assert.assertTrue("".equals(response.getCommandOutput()));
 
-            powerShell.close();
-        }
+        powerShell.close();
     }
 
     /**
@@ -120,17 +116,16 @@ public class PowerShellTest {
     @Test
     public void testLongCommand() {
         System.out.println("testLongCommand");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell
-                    .executeCommand("Get-WMIObject -List | Where{$_.name -match \"^Win32_\"} | Sort Name");
-            System.out.println("Long list:" + response.getCommandOutput());
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell
+                .executeCommand("Get-WMIObject -List | Where{$_.name -match \"^Win32_\"} | Sort Name");
+        System.out.println("Long list:" + response.getCommandOutput());
 
-            Assert.assertFalse(powerShell.isLastCommandInError());
-            Assert.assertTrue(response.getCommandOutput().length() > 1000);
+        Assert.assertFalse(powerShell.isLastCommandInError());
+        Assert.assertTrue(response.getCommandOutput().length() > 1000);
 
-            powerShell.close();
-        }
+        powerShell.close();
     }
 
     /**
@@ -139,16 +134,15 @@ public class PowerShellTest {
     @Test
     public void testErrorCase() {
         System.out.println("testErrorCase");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell.executeCommand("sfdsfdsf");
-            System.out.println("Error:" + response.getCommandOutput());
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("sfdsfdsf");
+        System.out.println("Error:" + response.getCommandOutput());
 
-            Assert.assertTrue(response.getCommandOutput().contains("sfdsfdsf"));
-            Assert.assertTrue(powerShell.isLastCommandInError());
+        Assert.assertTrue(response.getCommandOutput().contains("sfdsfdsf"));
+        Assert.assertTrue(powerShell.isLastCommandInError());
 
-            powerShell.close();
-        }
+        powerShell.close();
     }
 
     /**
@@ -157,24 +151,23 @@ public class PowerShellTest {
     @Test
     public void testMultipleCalls() {
         System.out.println("testMultiple");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell.executeCommand("dir");
-            System.out.println("First call:" + response.getCommandOutput());
-            Assert.assertFalse(powerShell.isLastCommandInError());
-            Assert.assertTrue("Cannot find LastWriteTime", response.getCommandOutput().contains("LastWriteTime"));
-            response = powerShell.executeCommand("Get-Process");
-            System.out.println("Second call:" + response.getCommandOutput());
-            Assert.assertFalse(powerShell.isLastCommandInError());
-            Assert.assertTrue("Cannot find powershell", response.getCommandOutput().contains("powershell"));
-            response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
-            System.out.println("Third call:" + response.getCommandOutput());
-            Assert.assertFalse(powerShell.isLastCommandInError());
-            Assert.assertTrue("Cannot find SMBIOSBIOSVersion",
-                    response.getCommandOutput().contains("SMBIOSBIOSVersion"));
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("dir");
+        System.out.println("First call:" + response.getCommandOutput());
+        Assert.assertFalse(powerShell.isLastCommandInError());
+        Assert.assertTrue("Cannot find LastWriteTime", response.getCommandOutput().contains("LastWriteTime"));
+        response = powerShell.executeCommand("Get-Process");
+        System.out.println("Second call:" + response.getCommandOutput());
+        Assert.assertFalse(powerShell.isLastCommandInError());
+        Assert.assertTrue("Cannot find powershell", response.getCommandOutput().contains("powershell"));
+        response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+        System.out.println("Third call:" + response.getCommandOutput());
+        Assert.assertFalse(powerShell.isLastCommandInError());
+        Assert.assertTrue("Cannot find SMBIOSBIOSVersion",
+                response.getCommandOutput().contains("SMBIOSBIOSVersion"));
 
-            powerShell.close();
-        }
+        powerShell.close();
     }
 
     /**
@@ -183,6 +176,7 @@ public class PowerShellTest {
     @Test
     public void testExample() {
         System.out.println("testExample");
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
         PowerShell powerShell = null;
         try {
             // Creates PowerShell session (we can execute several commands in
@@ -219,12 +213,11 @@ public class PowerShellTest {
     @Test(expected = Test.None.class /* no exception expected */)
     public void testFunctionalExample() {
         System.out.println("testFunctionalExample");
-        if (OSDetector.isWindows()) {
-            PowerShell.openSession()
-                    .executeCommandAndChain("Get-Process", (res -> System.out.println("List Processes:" + res.getCommandOutput())))
-                    .executeCommandAndChain("Get-WmiObject Win32_BIOS", (res -> System.out.println("BIOS information:" + res.getCommandOutput())))
-                    .close();
-        }
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell.openSession()
+                .executeCommandAndChain("Get-Process", (res -> System.out.println("List Processes:" + res.getCommandOutput())))
+                .executeCommandAndChain("Get-WmiObject Win32_BIOS", (res -> System.out.println("BIOS information:" + res.getCommandOutput())))
+                .close();
     }
 
     /**
@@ -232,18 +225,17 @@ public class PowerShellTest {
      */
     public void testOtherExecutablePath() {
         PowerShell powerShell = null;
-        if (OSDetector.isWindows()) {
-            try {
-                powerShell = PowerShell.openSession("powerShell2.exe");
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        try {
+            powerShell = PowerShell.openSession("powerShell2.exe");
 
-                //Should throw a PowerShellNotAvailableException
-                exception.expect(PowerShellNotAvailableException.class);
-                PowerShellResponse response = powerShell.executeCommand("Get-Process");
-            } finally {
-                // Always close PowerShell session to free resources.
-                if (powerShell != null) {
-                    powerShell.close();
-                }
+            //Should throw a PowerShellNotAvailableException
+            exception.expect(PowerShellNotAvailableException.class);
+            PowerShellResponse response = powerShell.executeCommand("Get-Process");
+        } finally {
+            // Always close PowerShell session to free resources.
+            if (powerShell != null) {
+                powerShell.close();
             }
         }
     }
@@ -254,58 +246,57 @@ public class PowerShellTest {
     @Test
     public void testComplexLoop() {
         System.out.println("testExample");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = null;
-            try {
-                powerShell = PowerShell.openSession();
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = null;
+        try {
+            powerShell = PowerShell.openSession();
 
-                for (int i = 0; i < 10; i++) {
-                    PowerShellResponse response = powerShell.executeCommand("Get-Process");
-
-                    System.out.println("List Processes:" + response.getCommandOutput());
-
-                    response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
-
-                    System.out.println("BIOS information:" + response.getCommandOutput());
-
-                    response = powerShell.executeCommand("sfdsfdsf");
-
-                    System.out.println("Error:" + response.getCommandOutput());
-
-                    response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
-
-                    System.out.println("BIOS information:" + response.getCommandOutput());
-                }
-            } finally {
-                if (powerShell != null) {
-                    powerShell.close();
-                }
-            }
-
-            try {
-                // Creates PowerShell session (we can execute several commands in
-                // the same session)
-                powerShell = PowerShell.openSession();
-
-                // Execute a command in PowerShell session
+            for (int i = 0; i < 10; i++) {
                 PowerShellResponse response = powerShell.executeCommand("Get-Process");
 
-                // Print results
                 System.out.println("List Processes:" + response.getCommandOutput());
 
-                // Execute another command in the same PowerShell session
                 response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
 
-                // Print results
                 System.out.println("BIOS information:" + response.getCommandOutput());
-            } catch (PowerShellNotAvailableException ex) {
-                // Handle error when PowerShell is not available in the system
-                // Maybe try in another way?
-            } finally {
-                // Always close PowerShell session to free resources.
-                if (powerShell != null) {
-                    powerShell.close();
-                }
+
+                response = powerShell.executeCommand("sfdsfdsf");
+
+                System.out.println("Error:" + response.getCommandOutput());
+
+                response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+
+                System.out.println("BIOS information:" + response.getCommandOutput());
+            }
+        } finally {
+            if (powerShell != null) {
+                powerShell.close();
+            }
+        }
+
+        try {
+            // Creates PowerShell session (we can execute several commands in
+            // the same session)
+            powerShell = PowerShell.openSession();
+
+            // Execute a command in PowerShell session
+            PowerShellResponse response = powerShell.executeCommand("Get-Process");
+
+            // Print results
+            System.out.println("List Processes:" + response.getCommandOutput());
+
+            // Execute another command in the same PowerShell session
+            response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+
+            // Print results
+            System.out.println("BIOS information:" + response.getCommandOutput());
+        } catch (PowerShellNotAvailableException ex) {
+            // Handle error when PowerShell is not available in the system
+            // Maybe try in another way?
+        } finally {
+            // Always close PowerShell session to free resources.
+            if (powerShell != null) {
+                powerShell.close();
             }
         }
     }
@@ -316,26 +307,25 @@ public class PowerShellTest {
     @Test
     public void testLoop() {
         System.out.println("testLoop");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = null;
-            try {
-                powerShell = PowerShell.openSession();
-                for (int i = 0; i < 10; i++) {
-                    System.out.print("Cycle: " + i);
-                    // Thread.sleep(3000);
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = null;
+        try {
+            powerShell = PowerShell.openSession();
+            for (int i = 0; i < 10; i++) {
+                System.out.print("Cycle: " + i);
+                // Thread.sleep(3000);
 
-                    String output = powerShell.executeCommand("date").getCommandOutput().trim();
+                String output = powerShell.executeCommand("date").getCommandOutput().trim();
 
-                    System.out.println("\t" + output);
-                }
-            } catch (PowerShellNotAvailableException ex) {
-                // Handle error when PowerShell is not available in the system
-                // Maybe try in another way?
-            } finally {
-                // Always close PowerShell session to free resources.
-                if (powerShell != null) {
-                    powerShell.close();
-                }
+                System.out.println("\t" + output);
+            }
+        } catch (PowerShellNotAvailableException ex) {
+            // Handle error when PowerShell is not available in the system
+            // Maybe try in another way?
+        } finally {
+            // Always close PowerShell session to free resources.
+            if (powerShell != null) {
+                powerShell.close();
             }
         }
     }
@@ -346,35 +336,34 @@ public class PowerShellTest {
     @Test
     public void testLongLoop() {
         System.out.println("testLongLoop");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = null;
-            try {
-                powerShell = PowerShell.openSession();
-                for (int i = 0; i < 100; i++) {
-                    System.out.print("Cycle: " + i);
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = null;
+        try {
+            powerShell = PowerShell.openSession();
+            for (int i = 0; i < 100; i++) {
+                System.out.print("Cycle: " + i);
 
-                    // Thread.sleep(100);
-                    PowerShellResponse response = powerShell.executeCommand("date"); // Line
-                    // 17
-                    // (see
-                    // exception
-                    // below)
-                    if (powerShell.isLastCommandInError()) {
-                        System.out.println("error"); // never called
-                    }
-
-                    String output = "<" + response.getCommandOutput().trim() + ">";
-
-                    System.out.println("\t" + output);
+                // Thread.sleep(100);
+                PowerShellResponse response = powerShell.executeCommand("date"); // Line
+                // 17
+                // (see
+                // exception
+                // below)
+                if (powerShell.isLastCommandInError()) {
+                    System.out.println("error"); // never called
                 }
-            } catch (PowerShellNotAvailableException ex) {
-                // Handle error when PowerShell is not available in the system
-                // Maybe try in another way?
-            } finally {
-                // Always close PowerShell session to free resources.
-                if (powerShell != null) {
-                    powerShell.close();
-                }
+
+                String output = "<" + response.getCommandOutput().trim() + ">";
+
+                System.out.println("\t" + output);
+            }
+        } catch (PowerShellNotAvailableException ex) {
+            // Handle error when PowerShell is not available in the system
+            // Maybe try in another way?
+        } finally {
+            // Always close PowerShell session to free resources.
+            if (powerShell != null) {
+                powerShell.close();
             }
         }
     }
@@ -385,152 +374,146 @@ public class PowerShellTest {
     @Test
     public void testTimeout() {
         System.out.println("testTimeout");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = null;
-            try {
-                response = powerShell.executeCommand("Start-Sleep -s 15");
-            } finally {
-                powerShell.close();
-            }
-
-            Assert.assertNotNull(response);
-            Assert.assertTrue("PS error should finish in timeout", response.isTimeout());
-
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = null;
+        try {
+            response = powerShell.executeCommand("Start-Sleep -s 15");
+        } finally {
+            powerShell.close();
         }
+
+        Assert.assertNotNull(response);
+        Assert.assertTrue("PS error should finish in timeout", response.isTimeout());
+
     }
 
     //Activate only when having the right for remote execution
     //@Test
     public void testRemote() {
         System.out.println("testRemote");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell.executeCommand(
-                    "Invoke-command -ComputerName localhost {Write-Host \"Test from Remote\"}");
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand(
+                "Invoke-command -ComputerName localhost {Write-Host \"Test from Remote\"}");
 
-            System.out.println("Output:" + response.getCommandOutput());
+        System.out.println("Output:" + response.getCommandOutput());
 
-            Assert.assertFalse(response.isError());
+        Assert.assertFalse(response.isError());
 
-            powerShell.close();
-        }
+        powerShell.close();
     }
 
     @Test
     public void testScript() throws Exception {
         System.out.println("testScript");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            Map<String, String> config = new HashMap<>();
-            PowerShellResponse response = null;
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        Map<String, String> config = new HashMap<>();
+        PowerShellResponse response = null;
 
-            StringBuilder scriptContent = new StringBuilder();
-            scriptContent.append("Write-Host \"First message\"").append(CRLF);
+        StringBuilder scriptContent = new StringBuilder();
+        scriptContent.append("Write-Host \"First message\"").append(CRLF);
 
-            try {
-                response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()));
-            } finally {
-                powerShell.close();
-            }
-
-            Assert.assertNotNull("Response null!", response);
-            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
-                Assert.assertFalse("Is in error!", response.isError());
-                Assert.assertFalse("Is timeout!", response.isTimeout());
-            }
-            System.out.println(response.getCommandOutput());
+        try {
+            response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()));
+        } finally {
+            powerShell.close();
         }
+
+        Assert.assertNotNull("Response null!", response);
+        if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+            Assert.assertFalse("Is in error!", response.isError());
+            Assert.assertFalse("Is timeout!", response.isTimeout());
+        }
+        System.out.println(response.getCommandOutput());
     }
 
     @Test
     public void testScriptByBufferedReader() throws Exception {
         System.out.println("testScriptByBufferedReader");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            Map<String, String> config = new HashMap<>();
-            PowerShellResponse response = null;
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        Map<String, String> config = new HashMap<>();
+        PowerShellResponse response = null;
 
-            StringBuilder scriptContent = new StringBuilder();
-            scriptContent.append("Write-Host \"First message\"").append(CRLF);
+        StringBuilder scriptContent = new StringBuilder();
+        scriptContent.append("Write-Host \"First message\"").append(CRLF);
 
-            BufferedReader srcReader = null;
-            try {
-                srcReader = new BufferedReader(new FileReader(generateScript(scriptContent.toString())));
-            } catch (FileNotFoundException fnfex) {
-                Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
-                        "Unexpected error when processing PowerShell script: file not found", fnfex);
-            }
-
-            Assert.assertNotNull("Cannot create reader from temp file", srcReader);
-
-            try {
-                response = powerShell.configuration(config).executeScript(srcReader);
-            } finally {
-                powerShell.close();
-            }
-
-            Assert.assertNotNull("Response null!", response);
-            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
-                Assert.assertFalse("Is in error!", response.isError());
-                Assert.assertFalse("Is timeout!", response.isTimeout());
-            }
-            System.out.println(response.getCommandOutput());
+        BufferedReader srcReader = null;
+        try {
+            srcReader = new BufferedReader(new FileReader(generateScript(scriptContent.toString())));
+        } catch (FileNotFoundException fnfex) {
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                    "Unexpected error when processing PowerShell script: file not found", fnfex);
         }
+
+        Assert.assertNotNull("Cannot create reader from temp file", srcReader);
+
+        try {
+            response = powerShell.configuration(config).executeScript(srcReader);
+        } finally {
+            powerShell.close();
+        }
+
+        Assert.assertNotNull("Response null!", response);
+        if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+            Assert.assertFalse("Is in error!", response.isError());
+            Assert.assertFalse("Is timeout!", response.isTimeout());
+        }
+        System.out.println(response.getCommandOutput());
     }
 
     @Test
     public void testLongScript() throws Exception {
         System.out.println("testLongScript");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            Map<String, String> config = new HashMap<>();
-            config.put("maxWait", "80000");
-            PowerShellResponse response = null;
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        Map<String, String> config = new HashMap<>();
+        config.put("maxWait", "80000");
+        PowerShellResponse response = null;
 
-            StringBuilder scriptContent = new StringBuilder();
-            scriptContent.append("Write-Host \"First message\"").append(CRLF);
-            scriptContent.append("$output = \"c:\\10meg.test\"").append(CRLF);
-            scriptContent.append(
-                    "(New-Object System.Net.WebClient).DownloadFile(\"http://ipv4.download.thinkbroadband.com/10MB.zip\",$output)")
-                    .append(CRLF);
-            scriptContent.append("Write-Host \"Second message\"").append(CRLF);
-            scriptContent.append(
-                    "(New-Object System.Net.WebClient).DownloadFile(\"http://ipv4.download.thinkbroadband.com/10MB.zip\",$output)")
-                    .append(CRLF);
-            scriptContent.append("Write-Host \"Finish!\"").append(CRLF);
+        StringBuilder scriptContent = new StringBuilder();
+        scriptContent.append("Write-Host \"First message\"").append(CRLF);
+        scriptContent.append("$output = \"c:\\10meg.test\"").append(CRLF);
+        scriptContent.append(
+                "(New-Object System.Net.WebClient).DownloadFile(\"http://ipv4.download.thinkbroadband.com/10MB.zip\",$output)")
+                .append(CRLF);
+        scriptContent.append("Write-Host \"Second message\"").append(CRLF);
+        scriptContent.append(
+                "(New-Object System.Net.WebClient).DownloadFile(\"http://ipv4.download.thinkbroadband.com/10MB.zip\",$output)")
+                .append(CRLF);
+        scriptContent.append("Write-Host \"Finish!\"").append(CRLF);
 
-            try {
-                response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()));
-            } finally {
-                powerShell.close();
-            }
-
-            Assert.assertNotNull("Response null!", response);
-            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
-                Assert.assertFalse("Is in error!", response.isError());
-                Assert.assertFalse("Is timeout!", response.isTimeout());
-            }
-            System.out.println(response.getCommandOutput());
+        try {
+            response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()));
+        } finally {
+            powerShell.close();
         }
+
+        Assert.assertNotNull("Response null!", response);
+        if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+            Assert.assertFalse("Is in error!", response.isError());
+            Assert.assertFalse("Is timeout!", response.isTimeout());
+        }
+        System.out.println(response.getCommandOutput());
     }
 
     @Test
     public void testExecuteCommandAfterClose() {
         System.out.println("start testExecuteCommandAfterClose");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
-            System.out.println("Check BIOS:" + response.getCommandOutput());
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        PowerShellResponse response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+        System.out.println("Check BIOS:" + response.getCommandOutput());
 
-            Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
+        Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
 
-            powerShell.close();
+        powerShell.close();
 
-            //Should throw a RejectedExecutionException
-            exception.expect(IllegalStateException.class);
-            powerShell.executeCommand("Get-Process");
-        }
+        //Should throw a RejectedExecutionException
+        exception.expect(IllegalStateException.class);
+        powerShell.executeCommand("Get-Process");
     }
 
     /**
@@ -539,21 +522,20 @@ public class PowerShellTest {
     @Test
     public void testConfiguration() {
         System.out.println("testConfiguration");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            Map<String, String> config = new HashMap<>();
-            config.put("maxWait", "1000");
-            PowerShellResponse response = null;
-            try {
-                response = powerShell.configuration(config).executeCommand("Start-Sleep -s 10; Get-Process");
-            } finally {
-                powerShell.close();
-            }
-
-            Assert.assertNotNull(response);
-            Assert.assertTrue("PS error should finish in timeout", response.isTimeout());
-
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        Map<String, String> config = new HashMap<>();
+        config.put("maxWait", "1000");
+        PowerShellResponse response = null;
+        try {
+            response = powerShell.configuration(config).executeCommand("Start-Sleep -s 10; Get-Process");
+        } finally {
+            powerShell.close();
         }
+
+        Assert.assertNotNull(response);
+        Assert.assertTrue("PS error should finish in timeout", response.isTimeout());
+
     }
 
     /**
@@ -562,31 +544,30 @@ public class PowerShellTest {
     @Test
     public void testScriptWithArgs() throws Exception {
         System.out.println("testScriptWithArgs");
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            Map<String, String> config = new HashMap<>();
-            PowerShellResponse response = null;
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        Map<String, String> config = new HashMap<>();
+        PowerShellResponse response = null;
 
-            StringBuilder scriptContent = new StringBuilder();
-            scriptContent.append("Param([string]$computerName)").append(CRLF);
-            scriptContent.append("$computerName").append(CRLF);
+        StringBuilder scriptContent = new StringBuilder();
+        scriptContent.append("Param([string]$computerName)").append(CRLF);
+        scriptContent.append("$computerName").append(CRLF);
 
-            try {
-                response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()), "–computerName SERVER1");
-            } finally {
-                powerShell.close();
-            }
-
-            Assert.assertNotNull("Response null!", response);
-            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
-                Assert.assertFalse("Is in error!", response.isError());
-                Assert.assertFalse("Is timeout!", response.isTimeout());
-            }
-
-            Assert.assertTrue(response.getCommandOutput().contains("SERVER1"));
-            System.out.println(response.getCommandOutput());
-
+        try {
+            response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()), "–computerName SERVER1");
+        } finally {
+            powerShell.close();
         }
+
+        Assert.assertNotNull("Response null!", response);
+        if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+            Assert.assertFalse("Is in error!", response.isError());
+            Assert.assertFalse("Is timeout!", response.isTimeout());
+        }
+
+        Assert.assertTrue(response.getCommandOutput().contains("SERVER1"));
+        System.out.println(response.getCommandOutput());
+
     }
 
     /**
@@ -595,14 +576,13 @@ public class PowerShellTest {
     @Test
     public void testSOQuestion() {
         System.out.println("testSOQuestion");
-        if (OSDetector.isWindows()) {
-            String command = "Get-ItemProperty " +
-                    "HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* " +
-                    "| Select-Object DisplayName, DisplayVersion, Publisher, InstallDate " +
-                    "| Format-Table –AutoSize";
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        String command = "Get-ItemProperty " +
+                "HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\* " +
+                "| Select-Object DisplayName, DisplayVersion, Publisher, InstallDate " +
+                "| Format-Table –AutoSize";
 
-            System.out.println(PowerShell.executeSingleCommand(command).getCommandOutput());
-        }
+        System.out.println(PowerShell.executeSingleCommand(command).getCommandOutput());
     }
 
     /**
@@ -610,31 +590,30 @@ public class PowerShellTest {
      */
     @Test
     public void testCommandAfterScript() throws Exception {
-        if (OSDetector.isWindows()) {
-            PowerShell powerShell = PowerShell.openSession();
-            Map<String, String> config = new HashMap<>();
-            PowerShellResponse response = null;
+        Assume.assumeTrue("Requires Windows PowerShell", OSDetector.isWindows());
+        PowerShell powerShell = PowerShell.openSession();
+        Map<String, String> config = new HashMap<>();
+        PowerShellResponse response = null;
 
-            StringBuilder scriptContent = new StringBuilder();
-            scriptContent.append("Write-Host \"First message\"").append(CRLF);
-            response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()));
+        StringBuilder scriptContent = new StringBuilder();
+        scriptContent.append("Write-Host \"First message\"").append(CRLF);
+        response = powerShell.configuration(config).executeScript(generateScript(scriptContent.toString()));
 
-            Assert.assertNotNull("Response null!", response);
-            if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
-                Assert.assertFalse("Is in error!", response.isError());
-                Assert.assertFalse("Is timeout!", response.isTimeout());
-            }
-            System.out.println(response.getCommandOutput());
-
-            //Execute command after script
-            response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
-            System.out.println("Check BIOS:" + response.getCommandOutput());
-
+        Assert.assertNotNull("Response null!", response);
+        if (!response.getCommandOutput().contains("UnauthorizedAccess")) {
+            Assert.assertFalse("Is in error!", response.isError());
             Assert.assertFalse("Is timeout!", response.isTimeout());
-            Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
-
-            powerShell.close();
         }
+        System.out.println(response.getCommandOutput());
+
+        //Execute command after script
+        response = powerShell.executeCommand("Get-WmiObject Win32_BIOS");
+        System.out.println("Check BIOS:" + response.getCommandOutput());
+
+        Assert.assertFalse("Is timeout!", response.isTimeout());
+        Assert.assertTrue(response.getCommandOutput().contains("SMBIOSBIOSVersion"));
+
+        powerShell.close();
 
     }
 
