@@ -48,6 +48,9 @@ public class PowerShellLinuxTest {
     public static void requirePowerShell() {
         Assume.assumeFalse("Windows PowerShell is covered by PowerShellTest", OSDetector.isWindows());
         Assume.assumeTrue("pwsh is not installed or cannot be started", TestShell.available());
+        Assume.assumeTrue("PowerShell (" + TestShell.executable()
+                        + ") runs but does not answer commands through stdin",
+                TestShell.canRunCommands());
     }
 
     private static PowerShell openSession() {
@@ -196,7 +199,16 @@ public class PowerShellLinuxTest {
         Assert.assertTrue("openSession took " + elapsed + " ms", elapsed < 2000L);
     }
 
-    /**
+    /**jPowerShell feature/linux-tests-central-portal ✗ mvn -v | head -3
+     /home/javier/Dev/github/.pwsh/pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString(); $PWD'
+     Apache Maven 3.10.0 (c43a36b8d67be7e0805a411bc0898af1a51f5472)
+     Maven home: /usr/share/java/maven
+     Java version: 27.0.1.0.2, vendor: Eclipse Adoptium, runtime: /home/javier/.local/share/mise/installs/java/27.0.1+0
+     7.6.9
+
+     Path
+     ----
+     /home/javier/Dev/github/jPowerShell
      * Known bug (issue #11): a command that writes nothing waits for the whole maxWait
      * and is reported as a timeout, even though it finished successfully.
      * <p>

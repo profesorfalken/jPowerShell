@@ -142,7 +142,8 @@ public class PowerShell implements AutoCloseable {
             pb = new ProcessBuilder("cmd.exe", "/c", "chcp", codePage, ">", "NUL", "&", powerShellExecutablePath,
                     "-ExecutionPolicy", "Bypass", "-NoExit", "-NoProfile", "-Command", "-");
         } else {
-            pb = new ProcessBuilder(powerShellExecutablePath, "-nologo", "-noexit", "-Command", "-");
+            pb = new ProcessBuilder(powerShellExecutablePath, "-nologo", "-noexit", "-noninteractive",
+                    "-noprofile", "-Command", "-");
         }
 
         //Merge standard and error streams

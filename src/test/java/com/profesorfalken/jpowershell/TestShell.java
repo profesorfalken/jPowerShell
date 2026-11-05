@@ -14,6 +14,10 @@
 package com.profesorfalken.jpowershell;
 
 import java.io.File;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -87,6 +91,51 @@ final class TestShell {
             return process.exitValue() == 0;
         } catch (Exception ex) {
             return false;
+        }
+    }
+
+    /**
+     * Checks that PowerShell actually answers a command sent through stdin, which is
+     * how the library drives it. Some environments start the executable but never
+     * return its output, and that has nothing to do with jPowerShell: in that case
+     * the tests are skipped with a explicit message instead of failing seven times
+     * with an empty response.
+     *
+     * @return true if a command written to stdin produces output
+     */
+    static boolean canRunCommands() {
+        Process process = null;
+        try {
+            process = new ProcessBuilder(executable(), "-nologo", "-noexit", "-noninteractive",
+                    "-noprofile", "-Command", "-")
+                    .redirectErrorStream(true)
+                    .start();
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(process.getOutputStream()), true);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            writer.println("Write-Output jpowershell-probe");
+
+            StringBuilder output = new StringBuilder();
+            long deadline = System.currentTimeMillis() + 8000L;
+            while (System.currentTimeMillis() < deadline) {
+                if (reader.ready()) {
+                    int read = reader.read();
+                    if (read >= 0) {
+                        output.append((char) read);
+                        if (output.indexOf("jpowershell-probe") >= 0) {
+                            return true;
+                        }
+                    }
+                } else {
+                    Thread.sleep(20L);
+                }
+            }
+            return false;
+        } catch (Exception ex) {
+            return false;
+        } finally {
+            if (process != null) {
+                process.destroyForcibly();
+            }
         }
     }
 }
