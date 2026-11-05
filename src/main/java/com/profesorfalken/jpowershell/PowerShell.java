@@ -202,16 +202,15 @@ public class PowerShell implements AutoCloseable {
         commandWriter.println(command);
 
         try {
-            if (!result.isDone()) {
-                try {
-                    commandOutput = result.get(maxWait, TimeUnit.MILLISECONDS);
-                } catch (TimeoutException timeoutEx) {
-                    timeout = true;
-                    isError = true;
-                    //Interrupt command after timeout
-                    result.cancel(true);
-                }
-            }
+            // get() returns immediately when the processor already finished, so there is
+            // no need to check isDone() first. Skipping it when it happened to be done
+            // discarded the output of every fast command.
+            commandOutput = result.get(maxWait, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException timeoutEx) {
+            timeout = true;
+            isError = true;
+            //Interrupt command after timeout
+            result.cancel(true);
         } catch (InterruptedException | ExecutionException ex) {
             logger.log(Level.SEVERE,
                     "Unexpected error when processing PowerShell command", ex);

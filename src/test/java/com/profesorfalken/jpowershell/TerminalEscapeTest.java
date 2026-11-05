@@ -99,12 +99,14 @@ public class TerminalEscapeTest {
 
     /**
      * A trailing escape sequence without newline used to leave the reader blocked,
-     * so the following commands returned nothing.
+     * so the following commands returned nothing. It also catches the race where a
+     * command finishes before the caller checks the result: the output used to be
+     * discarded when the future was already done.
      */
     @Test
     public void testConsecutiveCommandsDoNotHang() {
         try (PowerShell powerShell = openSession()) {
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 20; i++) {
                 PowerShellResponse response = powerShell.executeCommand("eco" + i);
 
                 Assert.assertFalse("Should not time out on iteration " + i, response.isTimeout());
