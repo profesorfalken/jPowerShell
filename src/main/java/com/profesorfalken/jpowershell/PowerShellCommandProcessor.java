@@ -17,11 +17,11 @@ package com.profesorfalken.jpowershell;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * Processor used to send commands to PowerShell console.<p>
@@ -33,7 +33,19 @@ class PowerShellCommandProcessor implements Callable<String> {
 
     private static final String CRLF = "\r\n";
 
+    /**
+     * Terminal control sequences (cursor keys, colours, window title...) that PowerShell
+     * emits when its console host detects a terminal. They carry no useful information
+     * and, worse, the last one usually arrives without a trailing newline.
+     */
+    private static final Pattern ANSI_ESCAPES = Pattern.compile(
+            "\u001B\\[[0-9;?]*[A-Za-z]"          // CSI: ESC [ ... letra
+                    + "|\u001B\\][^\u0007]*\u0007"    // OSC: ESC ] ... BEL
+                    + "|\u001B[()][A-Za-z0-9]");      // juego de caracteres
+
     private final BufferedReader reader;
+
+    private final Process process;
 
     private boolean closed = false;
 
@@ -44,14 +56,14 @@ class PowerShellCommandProcessor implements Callable<String> {
     /**
      * Constructor that takes the output and the input of the PowerShell session
      *
-     * @param name        the name of the CommandProcessor
-     * @param inputStream the stream needed to read the command output
-     * @param waitPause   long the wait pause in milliseconds
-     * @param scriptMode  boolean indicates if the command executes a script
+     * @param name       the name of the CommandProcessor
+     * @param process    the PowerShell process, used to detect the end of the stream
+     * @param waitPause  long the wait pause in milliseconds
+     * @param scriptMode boolean indicates if the command executes a script
      */
-    public PowerShellCommandProcessor(String name, InputStream inputStream, int waitPause, boolean scriptMode) {
-        this.reader = new BufferedReader(new InputStreamReader(
-                inputStream));
+    public PowerShellCommandProcessor(String name, Process process, int waitPause, boolean scriptMode) {
+        this.process = process;
+        this.reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.waitPause = waitPause;
         this.scriptMode = scriptMode;
     }
@@ -74,47 +86,91 @@ class PowerShellCommandProcessor implements Callable<String> {
             return ioe.getMessage();
         }
 
-        //Remove last CRLF from result
-        return powerShellOutput.toString().replaceAll("\\s+$", "");
-    }
+        String output = powerShellOutput.toString();
 
-    //Reads all data from output
-    private void readData(StringBuilder powerShellOutput) throws IOException {
-        String line;
-        while (null != (line = this.reader.readLine())) {
-
-            //In the case of script mode it finish when the last line is read
-            if (this.scriptMode) {
-                if (line.equals(PowerShell.END_SCRIPT_STRING)) {
-                    break;
-                }
-            }
-
-            powerShellOutput.append(line).append(CRLF);
-
-            //When not in script mode, it exits when the command is finished
-            if (!this.scriptMode) {
-                try {
-                    if (this.closed || !canContinueReading()) {
-                        break;
-                    }
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(PowerShellCommandProcessor.class.getName()).log(Level.SEVERE, "Error executing command and reading result", ex);
-                }
+        // In script mode the end marker is only a protocol detail, never part of the result
+        if (this.scriptMode) {
+            int markerIndex = output.indexOf(PowerShell.END_SCRIPT_STRING);
+            if (markerIndex >= 0) {
+                output = output.substring(0, markerIndex);
             }
         }
+
+        // Terminal control sequences are noise, not output
+        output = ANSI_ESCAPES.matcher(output).replaceAll("");
+
+        // Remove last CRLF from result
+        return output.replaceAll("\\s+$", "");
     }
 
-    //Checks when we can start reading the output. Timeout if it takes too long in order to avoid hangs
-    private boolean startReading() throws IOException, InterruptedException {
-        //If the reader is not ready, gives it some milliseconds
-        while (!this.reader.ready()) {
-            Thread.sleep(this.waitPause);
-            if (this.closed) {
+    /**
+     * Waits until the first byte of the response is available.
+     * <p>
+     * It never blocks on a read: it polls {@link BufferedReader#ready()} and gives up
+     * when the process is no longer alive.
+     *
+     * @return true if there is data to read
+     * @throws InterruptedException thread interrupted while waiting
+     */
+    private boolean startReading() throws InterruptedException {
+        while (!this.closed) {
+            try {
+                if (this.reader.ready()) {
+                    return true;
+                }
+                if (!this.process.isAlive()) {
+                    return false;
+                }
+            } catch (IOException ioe) {
                 return false;
             }
+            Thread.sleep(this.waitPause);
         }
-        return true;
+        return false;
+    }
+
+    /**
+     * Reads the output of the command character by character.
+     * <p>
+     * Reading is only attempted when {@link BufferedReader#ready()} says that data is
+     * available, so a read never blocks. This matters: PowerShell emits terminal escape
+     * sequences without a trailing newline, and a blocking {@code readLine()} waiting
+     * for that newline kept the processor stuck until the command timed out.
+     *
+     * @param powerShellOutput buffer where the output is collected
+     * @throws IOException          error reading data
+     * @throws InterruptedException thread interrupted while waiting for data
+     */
+    private void readData(StringBuilder powerShellOutput) throws IOException, InterruptedException {
+        while (!this.closed) {
+
+            if (this.reader.ready()) {
+                int read = this.reader.read();
+                if (read < 0) {
+                    return;
+                }
+                powerShellOutput.append((char) read);
+
+                // In the case of script mode it finishes when the end marker is read
+                if (this.scriptMode
+                        && powerShellOutput.indexOf(PowerShell.END_SCRIPT_STRING) >= 0) {
+                    return;
+                }
+                continue;
+            }
+
+            // Nothing buffered: if the process is gone there will be no more data
+            if (!this.process.isAlive()) {
+                return;
+            }
+
+            if (this.scriptMode) {
+                // A script can stay silent for a while, so wait for the marker
+                Thread.sleep(this.waitPause);
+            } else if (!canContinueReading()) {
+                return;
+            }
+        }
     }
 
     //Checks when we the reader can continue to read.

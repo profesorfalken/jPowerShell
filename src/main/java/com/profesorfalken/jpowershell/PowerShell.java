@@ -194,7 +194,7 @@ public class PowerShell implements AutoCloseable {
 
         checkState();
 
-        PowerShellCommandProcessor commandProcessor = new PowerShellCommandProcessor("standard", p.getInputStream(),
+        PowerShellCommandProcessor commandProcessor = new PowerShellCommandProcessor("standard", p,
                 this.waitPause, this.scriptMode);
         Future<String> result = threadpool.submit(commandProcessor);
 
