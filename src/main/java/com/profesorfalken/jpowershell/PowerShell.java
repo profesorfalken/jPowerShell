@@ -153,7 +153,10 @@ public class PowerShell implements AutoCloseable {
             //Launch process
             p = pb.start();
 
-            if (p.waitFor(5, TimeUnit.SECONDS) && !p.isAlive()) {
+            // A short wait detects an executable that exits immediately (wrong path, missing
+            // runtime). Waiting longer is pointless: a healthy PowerShell never exits, so the
+            // old 5 second wait was paid in full on every single session.
+            if (p.waitFor(500, TimeUnit.MILLISECONDS) && p.exitValue() != 0) {
                 throw new PowerShellNotAvailableException(
                         "Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + p.exitValue());
             }
