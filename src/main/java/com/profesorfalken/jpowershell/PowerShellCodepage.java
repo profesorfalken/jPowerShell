@@ -54,7 +54,7 @@ class PowerShellCodepage {
         codePages.put("874", "windows-874");
         codePages.put("875", "cp875");
         codePages.put("932", "shift_jis");
-        codePages.put("936", "gb2312");
+        codePages.put("936", "gbk");
         codePages.put("949", "ks_c_5601-1987");
         codePages.put("950", "big5");
         codePages.put("1026", "IBM1026");
