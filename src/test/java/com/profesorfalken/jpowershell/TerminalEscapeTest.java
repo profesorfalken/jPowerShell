@@ -98,6 +98,38 @@ public class TerminalEscapeTest {
     }
 
     /**
+     * PowerShell writes its escape sequences first, pauses, and only then the real
+     * output. Reading just the escapes used to end the command with an empty response.
+     */
+    @Test
+    public void testOutputArrivingAfterEscapeSequences() throws IOException {
+        File delayed = File.createTempFile("jpowershell_delayed_", ".sh");
+        try {
+            String script = "#!/bin/bash\n"
+                    + "while IFS= read -r line; do\n"
+                    + "  case \"$line\" in\n"
+                    + "    '$pid') printf '\\033[?1h\\033[?1l'; sleep 0.15; printf '4242\\n\\033[?1h' ;;\n"
+                    + "    exit)   exit 0 ;;\n"
+                    + "    *)      printf '\\033[?1h\\033[?1l'; sleep 0.15; printf 'OUT[%s]\\n\\033[?1h' \"$line\" ;;\n"
+                    + "  esac\n"
+                    + "done\n";
+            Files.write(delayed.toPath(), script.getBytes(StandardCharsets.UTF_8));
+            Assert.assertTrue("Cannot make the delayed shell executable", delayed.setExecutable(true));
+
+            Map<String, String> config = new HashMap<>();
+            config.put("maxWait", "5000");
+            try (PowerShell powerShell = PowerShell.openSession(delayed.getAbsolutePath()).configuration(config)) {
+                PowerShellResponse response = powerShell.executeCommand("dir");
+
+                Assert.assertFalse("Should not time out", response.isTimeout());
+                Assert.assertEquals("OUT[dir]", response.getCommandOutput());
+            }
+        } finally {
+            Assert.assertTrue("Cannot delete the delayed shell", delayed.delete());
+        }
+    }
+
+    /**
      * A trailing escape sequence without newline used to leave the reader blocked,
      * so the following commands returned nothing. It also catches the race where a
      * command finishes before the caller checks the result: the output used to be

@@ -168,9 +168,27 @@ class PowerShellCommandProcessor implements Callable<String> {
                 // A script can stay silent for a while, so wait for the marker
                 Thread.sleep(this.waitPause);
             } else if (!canContinueReading()) {
-                return;
+                // PowerShell writes terminal control sequences before the real output, with
+                // a pause in between. Reading only those is not the end of the command: if
+                // nothing but escapes and blanks arrived, keep waiting for the actual result.
+                if (isBlank(powerShellOutput)) {
+                    Thread.sleep(this.waitPause);
+                } else {
+                    return;
+                }
             }
         }
+    }
+
+    /**
+     * Checks whether the buffer holds nothing but terminal escape sequences and blanks.
+     *
+     * @param buffer collected output
+     * @return true if there is no real content yet
+     */
+    private boolean isBlank(StringBuilder buffer) {
+        String withoutEscapes = ANSI_ESCAPES.matcher(buffer).replaceAll("");
+        return withoutEscapes.trim().isEmpty();
     }
 
     //Checks when we the reader can continue to read.
