@@ -1,6 +1,8 @@
 ![](https://img.shields.io/maven-central/v/com.profesorfalken/jPowerShell.svg)
-![](https://img.shields.io/github/license/profesorfalken/jPowerShell.svg)
 [![CI](https://github.com/profesorfalken/jPowerShell/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/profesorfalken/jPowerShell/actions/workflows/ci.yml)
+[![Javadoc](https://javadoc.io/badge2/com.profesorfalken/jPowerShell/javadoc.svg)](https://javadoc.io/doc/com.profesorfalken/jPowerShell)
+![](https://img.shields.io/badge/Java-8%2B-orange)
+![](https://img.shields.io/github/license/profesorfalken/jPowerShell.svg)
 
 # jPowerShell
 
