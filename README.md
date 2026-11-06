@@ -1,6 +1,6 @@
 ![](https://img.shields.io/maven-central/v/com.profesorfalken/jPowerShell.svg)
 ![](https://img.shields.io/github/license/profesorfalken/jPowerShell.svg)
-![](https://travis-ci.org/profesorfalken/jPowerShell.svg)
+[![CI](https://github.com/profesorfalken/jPowerShell/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/profesorfalken/jPowerShell/actions/workflows/ci.yml)
 
 # jPowerShell
 
