@@ -15,12 +15,6 @@ Simple Java API that allows to interact with PowerShell console
               .close();
 ```
 
-#### New JPowerShell v3 is out
-
-The version 3 of JPowerShell includes an important revision and rewrite of most of the code that improves performance and stability.
-
-Check all the new features here: https://github.com/profesorfalken/jPowerShell/wiki/New-3.0-version-of-PowerShell
-
 ## Installation
 
 To install jPowerShell you can add the dependecy to your software project management tool: https://search.maven.org/artifact/com.profesorfalken/jPowerShell/3.2.0/jar
