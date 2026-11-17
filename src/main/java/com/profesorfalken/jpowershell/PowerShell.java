@@ -19,6 +19,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,6 +62,9 @@ public class PowerShell implements AutoCloseable {
 
     // Variables used for script mode
     private boolean scriptMode = false;
+
+    // Result of the last command, reported by PowerShell in the same round trip
+    private Boolean lastCommandSucceeded = null;
     public static final String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
 
     // Private constructor. Instance using openSession method
@@ -194,12 +198,23 @@ public class PowerShell implements AutoCloseable {
 
         checkState();
 
-        PowerShellCommandProcessor commandProcessor = new PowerShellCommandProcessor("standard", p,
-                this.waitPause, this.scriptMode);
+        // In script mode the end marker is the one the generated script already writes
+        final String marker = this.scriptMode ? END_SCRIPT_STRING : "JPWS-" + UUID.randomUUID();
+
+        final boolean reportStatus = !this.scriptMode;
+        PowerShellCommandProcessor commandProcessor = new PowerShellCommandProcessor(p,
+                this.waitPause, marker, reportStatus);
         Future<String> result = threadpool.submit(commandProcessor);
 
-        // Launch command
+        // The response is delimited by a marker printed after the command: the reader no
+        // longer has to guess where the output ends
         commandWriter.println(command);
+        if (reportStatus) {
+            // The result has to be read before anything else runs, and it travels in the
+            // same response thanks to the marker
+            commandWriter.println("Write-Output ($?)");
+            commandWriter.println("Write-Output \"" + marker + "\"");
+        }
 
         try {
             // get() returns immediately when the processor already finished, so there is
@@ -219,6 +234,7 @@ public class PowerShell implements AutoCloseable {
             // issue #2. Close and cancel processors/threads - Thanks to r4lly
             // for helping me here
             commandProcessor.close();
+            this.lastCommandSucceeded = commandProcessor.getLastCommandSucceeded();
         }
 
         return new PowerShellResponse(isError, commandOutput, timeout);
@@ -276,7 +292,15 @@ public class PowerShell implements AutoCloseable {
      * @return boolean
      */
     public boolean isLastCommandInError() {
-        return !Boolean.valueOf(executeCommand("$?").getCommandOutput());
+        if (this.lastCommandSucceeded != null) {
+            return !this.lastCommandSucceeded;
+        }
+
+        // A script does not report its status: ask for it, and forget the status of the
+        // query itself so the next call asks again
+        boolean inError = !Boolean.valueOf(executeCommand("$?").getCommandOutput());
+        this.lastCommandSucceeded = null;
+        return inError;
     }
 
     /**

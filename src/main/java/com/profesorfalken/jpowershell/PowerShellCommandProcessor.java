@@ -26,17 +26,19 @@ import java.util.regex.Pattern;
 /**
  * Processor used to send commands to PowerShell console.<p>
  * It works as an independent thread and its results are collected using the Future interface.
+ * <p>
+ * The end of a response is marked by a known string instead of guessed from the silence of
+ * the stream: the command is followed by a line that prints a unique marker, and the reader
+ * stops when it finds it. Guessing was the source of the empty responses, the truncated
+ * outputs and the mixing between commands.
  *
  * @author Javier Garcia Alonso
  */
 class PowerShellCommandProcessor implements Callable<String> {
 
-    private static final String CRLF = "\r\n";
-
     /**
      * Terminal control sequences (cursor keys, colours, window title...) that PowerShell
-     * emits when its console host detects a terminal. They carry no useful information
-     * and, worse, the last one usually arrives without a trailing newline.
+     * emits when its console host detects a terminal. They carry no useful information.
      */
     private static final Pattern ANSI_ESCAPES = Pattern.compile(
             "\u001B\\[[0-9;?]*[A-Za-z]"          // CSI: ESC [ ... letra
@@ -47,164 +49,104 @@ class PowerShellCommandProcessor implements Callable<String> {
 
     private final Process process;
 
-    private boolean closed = false;
-
-    private final boolean scriptMode;
+    private final String marker;
 
     private final int waitPause;
+
+    private final boolean expectStatus;
+
+    private volatile boolean closed = false;
+
+    /**
+     * Result of the last command, as reported by PowerShell right before the end marker,
+     * or null when the backend did not report it.
+     */
+    private Boolean lastCommandSucceeded = null;
 
     /**
      * Constructor that takes the output and the input of the PowerShell session
      *
-     * @param name       the name of the CommandProcessor
-     * @param process    the PowerShell process, used to detect the end of the stream
-     * @param waitPause  long the wait pause in milliseconds
-     * @param scriptMode boolean indicates if the command executes a script
+     * @param process      the PowerShell process, used to detect the end of the stream
+     * @param waitPause    the wait pause in milliseconds between reads
+     * @param marker       the string that marks the end of the response
+     * @param expectStatus whether the response ends with a True/False status line
      */
-    public PowerShellCommandProcessor(String name, Process process, int waitPause, boolean scriptMode) {
+    public PowerShellCommandProcessor(Process process, int waitPause, String marker, boolean expectStatus) {
         this.process = process;
         this.reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         this.waitPause = waitPause;
-        this.scriptMode = scriptMode;
+        this.marker = marker;
+        this.expectStatus = expectStatus;
+    }
+
+    /**
+     * Returns the result of the last command when PowerShell reported it.
+     *
+     * @return TRUE if the command succeeded, FALSE if it failed, null if not reported
+     */
+    public Boolean getLastCommandSucceeded() {
+        return this.lastCommandSucceeded;
     }
 
     /**
      * Calls the command and returns its output
      *
-     * @return String output of call
+     * @return String output of call, without the end marker
      * @throws InterruptedException error when reading data
      */
     public String call() throws InterruptedException {
-        StringBuilder powerShellOutput = new StringBuilder();
+        StringBuilder rawOutput = new StringBuilder();
 
         try {
-            if (startReading()) {
-                readData(powerShellOutput);
+            while (!this.closed) {
+                if (this.reader.ready()) {
+                    int read = this.reader.read();
+                    if (read < 0) {
+                        // The process closed its output: there will be no marker
+                        break;
+                    }
+                    rawOutput.append((char) read);
+                    if (rawOutput.indexOf(this.marker) >= 0) {
+                        break;
+                    }
+                    continue;
+                }
+
+                if (!this.process.isAlive()) {
+                    // Without a marker, whatever was collected is all the output there is
+                    break;
+                }
+
+                Thread.sleep(this.waitPause);
             }
         } catch (IOException ioe) {
-            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE, "Unexpected error reading PowerShell output", ioe);
-            return ioe.getMessage();
+            Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
+                    "Unexpected error reading PowerShell output", ioe);
         }
 
-        String output = powerShellOutput.toString();
+        String output = rawOutput.toString();
 
-        // In script mode the end marker is only a protocol detail, never part of the result
-        if (this.scriptMode) {
-            int markerIndex = output.indexOf(PowerShell.END_SCRIPT_STRING);
-            if (markerIndex >= 0) {
-                output = output.substring(0, markerIndex);
-            }
+        // Everything from the marker on belongs to the protocol, not to the command
+        int markerIndex = output.indexOf(this.marker);
+        if (markerIndex >= 0) {
+            output = output.substring(0, markerIndex);
         }
 
-        // Terminal control sequences are noise, not output
         output = ANSI_ESCAPES.matcher(output).replaceAll("");
+        output = output.replaceAll("[\\r\\n]+$", "");
 
-        // Remove last CRLF from result
-        return output.replaceAll("\\s+$", "");
-    }
+        if (this.expectStatus) {
+            // The status is the last line printed before the marker
+            int lastBreak = output.lastIndexOf('\n');
+            String lastLine = (lastBreak >= 0) ? output.substring(lastBreak + 1) : output;
 
-    /**
-     * Waits until the first byte of the response is available.
-     * <p>
-     * It never blocks on a read: it polls {@link BufferedReader#ready()} and gives up
-     * when the process is no longer alive.
-     *
-     * @return true if there is data to read
-     * @throws InterruptedException thread interrupted while waiting
-     */
-    private boolean startReading() throws InterruptedException {
-        while (!this.closed) {
-            try {
-                if (this.reader.ready()) {
-                    return true;
-                }
-                if (!this.process.isAlive()) {
-                    return false;
-                }
-            } catch (IOException ioe) {
-                return false;
-            }
-            Thread.sleep(this.waitPause);
-        }
-        return false;
-    }
-
-    /**
-     * Reads the output of the command character by character.
-     * <p>
-     * Reading is only attempted when {@link BufferedReader#ready()} says that data is
-     * available, so a read never blocks. This matters: PowerShell emits terminal escape
-     * sequences without a trailing newline, and a blocking {@code readLine()} waiting
-     * for that newline kept the processor stuck until the command timed out.
-     *
-     * @param powerShellOutput buffer where the output is collected
-     * @throws IOException          error reading data
-     * @throws InterruptedException thread interrupted while waiting for data
-     */
-    private void readData(StringBuilder powerShellOutput) throws IOException, InterruptedException {
-        while (!this.closed) {
-
-            if (this.reader.ready()) {
-                int read = this.reader.read();
-                if (read < 0) {
-                    return;
-                }
-                powerShellOutput.append((char) read);
-
-                // In the case of script mode it finishes when the end marker is read
-                if (this.scriptMode
-                        && powerShellOutput.indexOf(PowerShell.END_SCRIPT_STRING) >= 0) {
-                    return;
-                }
-                continue;
-            }
-
-            // Nothing buffered: if the process is gone there will be no more data
-            if (!this.process.isAlive()) {
-                return;
-            }
-
-            if (this.scriptMode) {
-                // A script can stay silent for a while, so wait for the marker
-                Thread.sleep(this.waitPause);
-            } else if (!canContinueReading()) {
-                // PowerShell writes terminal control sequences before the real output, with
-                // a pause in between. Reading only those is not the end of the command: if
-                // nothing but escapes and blanks arrived, keep waiting for the actual result.
-                if (isBlank(powerShellOutput)) {
-                    Thread.sleep(this.waitPause);
-                } else {
-                    return;
-                }
+            if ("True".equals(lastLine) || "False".equals(lastLine)) {
+                this.lastCommandSucceeded = Boolean.valueOf(lastLine);
+                return (lastBreak >= 0) ? output.substring(0, lastBreak) : "";
             }
         }
-    }
 
-    /**
-     * Checks whether the buffer holds nothing but terminal escape sequences and blanks.
-     *
-     * @param buffer collected output
-     * @return true if there is no real content yet
-     */
-    private boolean isBlank(StringBuilder buffer) {
-        String withoutEscapes = ANSI_ESCAPES.matcher(buffer).replaceAll("");
-        return withoutEscapes.trim().isEmpty();
-    }
-
-    //Checks when we the reader can continue to read.
-    private boolean canContinueReading() throws IOException, InterruptedException {
-        //If the reader is not ready, gives it some milliseconds
-        //It is important to do that, because the ready method guarantees that the readline will not be blocking
-        if (!this.reader.ready()) {
-            Thread.sleep(this.waitPause);
-        }
-
-        //If not ready yet, wait a moment to make sure it is finished
-        if (!this.reader.ready()) {
-            Thread.sleep(50);
-        }
-
-        return this.reader.ready();
+        return output;
     }
 
     /**
