@@ -211,13 +211,21 @@ public class PowerShell implements AutoCloseable {
 
         // The response is delimited by a marker printed after the command: the reader no
         // longer has to guess where the output ends
-        commandWriter.println(command);
-        if (reportStatus) {
-            // The result has to be read before anything else runs, and it travels in the
-            // same response thanks to the marker
-            commandWriter.println("Write-Output ($?)");
-            commandWriter.println("Write-Output \"" + marker + "\"");
-        }
+        //
+        // Writing happens in another thread: a command larger than the pipe buffer blocks
+        // until PowerShell reads it, and doing that on the caller thread froze the whole
+        // call with no timeout at all
+        final String commandToWrite = command;
+        final String endMarker = marker;
+        threadpool.submit(() -> {
+            commandWriter.println(commandToWrite);
+            if (reportStatus) {
+                // The result has to be read before anything else runs, and it travels in
+                // the same response thanks to the marker
+                commandWriter.println("Write-Output ($?)");
+                commandWriter.println("Write-Output \"" + endMarker + "\"");
+            }
+        });
 
         try {
             // get() returns immediately when the processor already finished, so there is
