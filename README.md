@@ -17,18 +17,18 @@ Simple Java API that allows to interact with PowerShell console
 
 ## Installation
 
-To install jPowerShell you can add the dependecy to your software project management tool: https://search.maven.org/artifact/com.profesorfalken/jPowerShell/3.2.0/jar
+To install jPowerShell you can add the dependecy to your software project management tool: https://search.maven.org/artifact/com.profesorfalken/jPowerShell/3.3.0/jar
 
 For example, for Maven you have just to add to your pom.xml:
 
       <dependency>
         <groupId>com.profesorfalken</groupId>
         <artifactId>jPowerShell</artifactId>
-        <version>3.2.0</version>
+        <version>3.3.0</version>
       </dependency>
 
 Instead, you can direct download the JAR file and add it to your classpath. 
-https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/3.2.0/jPowerShell-3.2.0.jar
+https://repo1.maven.org/maven2/com/profesorfalken/jPowerShell/3.3.0/jPowerShell-3.3.0.jar
 
 ## Basic Usage
 

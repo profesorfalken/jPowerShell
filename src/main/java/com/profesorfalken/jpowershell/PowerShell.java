@@ -191,6 +191,15 @@ public class PowerShell implements AutoCloseable {
      * This method launch a thread which will be executed in the already created
      * PowerShell console context
      *
+     * <p>
+     * The response is delimited by a marker printed by PowerShell after the command, so
+     * the output is returned complete even when it arrives in several chunks.
+     * <p>
+     * When the command does not finish within the configured {@code maxWait}, the session
+     * is left out of sync with the console: the response has {@code isTimeout()} set and
+     * the session is closed, so any later call throws {@link IllegalStateException}. Open
+     * a new session to continue.
+     *
      * @param command the command to call. Ex: dir
      * @return PowerShellResponse the information returned by powerShell
      */
@@ -300,6 +309,9 @@ public class PowerShell implements AutoCloseable {
 
     /**
      * Indicates if the last executed command finished in error
+     * <p>
+     * The status is reported by PowerShell in the same response as the command, so this
+     * method does not start a new one. After a script it asks for the status explicitly.
      *
      * @return boolean
      */
