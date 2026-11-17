@@ -188,7 +188,6 @@ public class PowerShellLinuxTest {
      * and PowerShell, being alive, always waits the whole timeout.
      */
     @Test
-    @Ignore("issue #84: openSession() blocks for 5 s in p.waitFor(5, TimeUnit.SECONDS)")
     public void testOpenSessionIsFast() {
         long start = System.currentTimeMillis();
         try (PowerShell powerShell = openSession()) {
@@ -215,7 +214,6 @@ public class PowerShellLinuxTest {
      * Documented with @Ignore so the fix has a test waiting for it.
      */
     @Test
-    @Ignore("issue #11: a command without output waits maxWait and returns timeout=true")
     public void testCommandWithoutOutput() {
         try (PowerShell powerShell = openSession()) {
             PowerShellResponse response = powerShell.executeCommand("$null = 1");
