@@ -395,67 +395,46 @@ public class PowerShell implements AutoCloseable {
      */
     @Override
     public void close() {
-        if (!this.closed) {
-            try {
-                Future<String> closeTask = threadpool.submit(() -> {
-                    commandWriter.println("exit");
-                    p.waitFor();
-                    return "OK";
-                });
-                if (!closeAndWait(closeTask) && this.pid > 0) {
-                    //If it can be closed, force kill the process
-                    Logger.getLogger(PowerShell.class.getName()).log(Level.INFO,
-                            "Forcing PowerShell to close. PID: " + this.pid);
-                    try {
-                        Runtime.getRuntime().exec("taskkill.exe /PID " + pid + " /F /T");
-                        this.closed = true;
-                    } catch (IOException e) {
-                        Logger.getLogger(PowerShell.class.getName()).log(Level.SEVERE,
-                                "Unexpected error while killing powershell process", e);
-                    }
+        if (this.closed) {
+            return;
+        }
+        this.closed = true;
+
+        try {
+            if (p != null && p.isAlive()) {
+                commandWriter.println("exit");
+                if (!p.waitFor(2, TimeUnit.SECONDS)) {
+                    // A process that does not answer to "exit" is killed directly: the old
+                    // implementation shelled out to taskkill.exe, which does not exist
+                    // outside Windows
+                    logger.log(Level.INFO, "Forcing PowerShell to close. PID: " + this.pid);
+                    p.destroyForcibly();
                 }
-            } catch (InterruptedException | ExecutionException ex) {
-                logger.log(Level.SEVERE,
-                        "Unexpected error when when closing PowerShell", ex);
-            } finally {
-                commandWriter.close();
+            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            if (p != null) {
+                p.destroyForcibly();
+            }
+        } finally {
+            commandWriter.close();
+            if (p != null && p.isAlive()) {
                 try {
-                    if (p.isAlive()) {
-                        p.getInputStream().close();
-                    }
+                    p.getInputStream().close();
                 } catch (IOException ex) {
-                    logger.log(Level.SEVERE,
-                            "Unexpected error when when closing streams", ex);
+                    logger.log(Level.SEVERE, "Unexpected error when closing streams", ex);
                 }
-                if (this.threadpool != null) {
-                    try {
-                        this.threadpool.shutdownNow();
-                        this.threadpool.awaitTermination(5, TimeUnit.SECONDS);
-                    } catch (InterruptedException ex) {
-                        logger.log(Level.SEVERE,
-                                "Unexpected error when when shutting down thread pool", ex);
-                    }
-
+            }
+            if (this.threadpool != null) {
+                this.threadpool.shutdownNow();
+                try {
+                    this.threadpool.awaitTermination(5, TimeUnit.SECONDS);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    logger.log(Level.SEVERE, "Unexpected error when shutting down thread pool", ex);
                 }
-                this.closed = true;
             }
         }
-    }
-
-    private boolean closeAndWait(Future<String> task) throws InterruptedException, ExecutionException {
-        boolean closed = true;
-        if (!task.isDone()) {
-            try {
-                task.get(maxWait, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException timeoutEx) {
-                logger.log(Level.WARNING,
-                        "Powershell process cannot be closed. Session seems to be blocked");
-                //Interrupt command after timeout
-                task.cancel(true);
-                closed = false;
-            }
-        }
-        return closed;
     }
 
     //Checks if PowerShell have been already closed
