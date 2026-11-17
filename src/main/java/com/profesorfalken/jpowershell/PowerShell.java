@@ -49,6 +49,9 @@ public class PowerShell implements AutoCloseable {
 
     // Threaded session variables
     private boolean closed = false;
+    // A session that timed out cannot be trusted: the pending output would be read by the
+    // next command
+    private volatile boolean broken = false;
     private ExecutorService threadpool;
 
     //Default PowerShell executable path
@@ -226,6 +229,7 @@ public class PowerShell implements AutoCloseable {
             isError = true;
             //Interrupt command after timeout
             result.cancel(true);
+            markBroken();
         } catch (InterruptedException | ExecutionException ex) {
             logger.log(Level.SEVERE,
                     "Unexpected error when processing PowerShell command", ex);
@@ -461,10 +465,24 @@ public class PowerShell implements AutoCloseable {
         }
     }
 
+    // Marks the session as unusable and kills the process behind it
+    private void markBroken() {
+        this.broken = true;
+        logger.log(Level.WARNING, "The PowerShell session did not answer in time and has been closed."
+                + " Open a new session to keep working.");
+        if (p != null && p.isAlive()) {
+            p.destroyForcibly();
+        }
+    }
+
     //Checks if PowerShell have been already closed
     private void checkState() {
         if (this.closed) {
             throw new IllegalStateException("PowerShell is already closed. Please open a new session.");
+        }
+        if (this.broken) {
+            throw new IllegalStateException("The PowerShell session is no longer usable after a timeout."
+                    + " Please open a new session.");
         }
     }
 
