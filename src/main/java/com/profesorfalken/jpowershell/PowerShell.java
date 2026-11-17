@@ -312,6 +312,12 @@ public class PowerShell implements AutoCloseable {
      * <p>
      * The status is reported by PowerShell in the same response as the command, so this
      * method does not start a new one. After a script it asks for the status explicitly.
+     * <p>
+     * A command that cannot be parsed is <b>not</b> reported here: PowerShell leaves
+     * {@code $?} untouched when it cannot parse the command, so this method still returns
+     * that the command succeeded. The parser error is available in
+     * {@link PowerShellResponse#getCommandOutput()}. Detecting it reliably requires
+     * reading the error stream separately, which is planned for 4.0.0.
      *
      * @return boolean
      */
