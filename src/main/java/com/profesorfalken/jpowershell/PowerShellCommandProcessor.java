@@ -52,6 +52,12 @@ class PowerShellCommandProcessor implements Callable<String> {
                     + "|\u001B\\][^\u0007]*\u0007"    // OSC: ESC ] ... BEL
                     + "|\u001B[()][A-Za-z0-9]");      // juego de caracteres
 
+    /**
+     * Characters read per iteration. Reading one by one was correct but slow for large
+     * outputs: a 100 KB response took several hundred milliseconds.
+     */
+    private static final int READ_BUFFER_SIZE = 8192;
+
     private final BufferedReader reader;
 
     private final Process process;
@@ -105,14 +111,15 @@ class PowerShellCommandProcessor implements Callable<String> {
         StringBuilder rawOutput = new StringBuilder();
 
         try {
+            char[] buffer = new char[READ_BUFFER_SIZE];
             while (!this.closed) {
                 if (this.reader.ready()) {
-                    int read = this.reader.read();
+                    int read = this.reader.read(buffer, 0, buffer.length);
                     if (read < 0) {
                         // The process closed its output: there will be no marker
                         break;
                     }
-                    rawOutput.append((char) read);
+                    rawOutput.append(buffer, 0, read);
                     if (rawOutput.indexOf(this.marker) >= 0) {
                         break;
                     }
