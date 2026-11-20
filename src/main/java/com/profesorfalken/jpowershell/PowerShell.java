@@ -195,6 +195,9 @@ public class PowerShell implements AutoCloseable {
      * The response is delimited by a marker printed by PowerShell after the command, so
      * the output is returned complete even when it arrives in several chunks.
      * <p>
+     * Calls are serialized: the session owns a single stdin/stdout pair, so two commands
+     * running at the same time would interleave their output and markers.
+     * <p>
      * When the command does not finish within the configured {@code maxWait}, the session
      * is left out of sync with the console: the response has {@code isTimeout()} set and
      * the session is closed, so any later call throws {@link IllegalStateException}. Open
@@ -203,7 +206,7 @@ public class PowerShell implements AutoCloseable {
      * @param command the command to call. Ex: dir
      * @return PowerShellResponse the information returned by powerShell
      */
-    public PowerShellResponse executeCommand(String command) {
+    public synchronized PowerShellResponse executeCommand(String command) {
         String commandOutput = "";
         boolean isError = false;
         boolean timeout = false;
