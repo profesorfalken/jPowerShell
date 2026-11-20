@@ -517,8 +517,16 @@ public class PowerShell implements AutoCloseable {
         if (this.closed) {
             throw new IllegalStateException("PowerShell is already closed. Please open a new session.");
         }
+
+        // The process can be gone because a script called exit or because it crashed: from
+        // here on every command would return an empty response as if it had run
+        if (!this.broken && p != null && !p.isAlive()) {
+            this.broken = true;
+            logger.log(Level.WARNING, "The PowerShell process is no longer running. Open a new session.");
+        }
+
         if (this.broken) {
-            throw new IllegalStateException("The PowerShell session is no longer usable after a timeout."
+            throw new IllegalStateException("The PowerShell session is no longer usable."
                     + " Please open a new session.");
         }
     }

@@ -200,4 +200,29 @@ public class MarkerProtocolTest {
             Assert.assertTrue("Took too long: " + elapsed + " ms", elapsed < 15000);
         }
     }
+
+    /**
+     * Once the process is gone there is no session: later commands must fail instead of
+     * returning an empty response as if they had run.
+     */
+    @Test
+    public void testDeadProcessInvalidatesTheSession() throws IOException {
+        File script = File.createTempFile("jpowershell_dead_", ".ps1");
+        try {
+            Files.write(script.toPath(), "Write-Output 'bye'\n".getBytes(StandardCharsets.UTF_8));
+
+            try (PowerShell powerShell = openSession(3000)) {
+                powerShell.executeScript(script.getAbsolutePath());
+
+                try {
+                    powerShell.executeCommand("eco");
+                    Assert.fail("A command on a dead process should not succeed silently");
+                } catch (IllegalStateException expected) {
+                    Assert.assertTrue(expected.getMessage().contains("no longer usable"));
+                }
+            }
+        } finally {
+            Assert.assertTrue("Cannot delete the script", script.delete());
+        }
+    }
 }
