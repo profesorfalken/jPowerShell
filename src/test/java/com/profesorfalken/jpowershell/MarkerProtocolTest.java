@@ -177,4 +177,27 @@ public class MarkerProtocolTest {
             powerShell.close();
         }
     }
+
+    /**
+     * A command larger than the pipe buffer used to block the caller with no timeout
+     * (issue #75): the write now happens on another thread.
+     */
+    @Test
+    public void testLargeCommandIsWritten() {
+        StringBuilder command = new StringBuilder("eco ");
+        for (int i = 0; i < 100000; i++) {
+            command.append('x');
+        }
+
+        try (PowerShell powerShell = openSession(20000)) {
+            long start = System.currentTimeMillis();
+            PowerShellResponse response = powerShell.executeCommand(command.toString());
+            long elapsed = System.currentTimeMillis() - start;
+
+            Assert.assertFalse("Should not time out", response.isTimeout());
+            Assert.assertTrue("Output truncated: " + response.getCommandOutput().length(),
+                    response.getCommandOutput().length() > 90000);
+            Assert.assertTrue("Took too long: " + elapsed + " ms", elapsed < 15000);
+        }
+    }
 }
