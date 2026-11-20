@@ -48,7 +48,7 @@ public class PowerShell implements AutoCloseable {
     private PrintWriter commandWriter;
 
     // Threaded session variables
-    private boolean closed = false;
+    private volatile boolean closed = false;
     // A session that timed out cannot be trusted: the pending output would be read by the
     // next command
     private volatile boolean broken = false;
@@ -66,8 +66,10 @@ public class PowerShell implements AutoCloseable {
     // Variables used for script mode
     private boolean scriptMode = false;
 
-    // Result of the last command, reported by PowerShell in the same round trip
-    private Boolean lastCommandSucceeded = null;
+    // Result of the last command, reported by PowerShell in the same round trip. It is
+    // written by executeCommand and read by isLastCommandInError(), possibly from another
+    // thread, so it has to be visible
+    private volatile Boolean lastCommandSucceeded = null;
     public static final String END_SCRIPT_STRING = "--END-JPOWERSHELL-SCRIPT--";
 
     // Private constructor. Instance using openSession method
@@ -459,7 +461,7 @@ public class PowerShell implements AutoCloseable {
      * Closes all the resources used to maintain the PowerShell context
      */
     @Override
-    public void close() {
+    public synchronized void close() {
         if (this.closed) {
             return;
         }
