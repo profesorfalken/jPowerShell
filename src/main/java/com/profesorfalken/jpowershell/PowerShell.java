@@ -391,10 +391,17 @@ public class PowerShell implements AutoCloseable {
         if (srcReader != null) {
             File tmpFile = createWriteTempFile(srcReader);
             if (tmpFile != null) {
-                this.scriptMode = true;
-                response = executeCommand(tmpFile.getAbsolutePath() + " " + params);
-                this.scriptMode = false;
-                tmpFile.delete();
+                try {
+                    this.scriptMode = true;
+                    response = executeCommand(tmpFile.getAbsolutePath() + " " + params);
+                } finally {
+                    // The session may be broken after a timeout: the flag has to be reset
+                    // and the temporary script removed even then
+                    this.scriptMode = false;
+                    if (!tmpFile.delete()) {
+                        logger.log(Level.FINE, "Cannot delete temporary script " + tmpFile);
+                    }
+                }
             } else {
                 response = new PowerShellResponse(true, "Cannot create temp script file!", false);
             }
