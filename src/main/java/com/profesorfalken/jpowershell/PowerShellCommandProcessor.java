@@ -37,6 +37,13 @@ import java.util.regex.Pattern;
 class PowerShellCommandProcessor implements Callable<String> {
 
     /**
+     * Prefix of the line that reports whether the last command succeeded. The prefix makes
+     * the line unmistakable: without it, the last line of a command that happens to be
+     * "True" or "False" could be taken for the status.
+     */
+    static final String STATUS_PREFIX = "JPWR-STATUS:";
+
+    /**
      * Terminal control sequences (cursor keys, colours, window title...) that PowerShell
      * emits when its console host detects a terminal. They carry no useful information.
      */
@@ -140,8 +147,9 @@ class PowerShellCommandProcessor implements Callable<String> {
             int lastBreak = output.lastIndexOf('\n');
             String lastLine = (lastBreak >= 0) ? output.substring(lastBreak + 1) : output;
 
-            if ("True".equals(lastLine) || "False".equals(lastLine)) {
-                this.lastCommandSucceeded = Boolean.valueOf(lastLine);
+            if (lastLine.startsWith(STATUS_PREFIX)) {
+                this.lastCommandSucceeded = Boolean
+                        .valueOf(lastLine.substring(STATUS_PREFIX.length()).trim());
                 return (lastBreak >= 0) ? output.substring(0, lastBreak) : "";
             }
         }

@@ -231,7 +231,8 @@ public class PowerShell implements AutoCloseable {
             if (reportStatus) {
                 // The result has to be read before anything else runs, and it travels in
                 // the same response thanks to the marker
-                commandWriter.println("Write-Output ($?)");
+                commandWriter.println("Write-Output (\"" + PowerShellCommandProcessor.STATUS_PREFIX
+                        + "\" + $?)");
                 commandWriter.println("Write-Output \"" + endMarker + "\"");
             }
         });
