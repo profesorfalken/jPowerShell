@@ -399,7 +399,10 @@ public class PowerShell implements AutoCloseable {
             if (tmpFile != null) {
                 try {
                     this.scriptMode = true;
-                    response = executeCommand(tmpFile.getAbsolutePath() + " " + params);
+                    // The call operator is required: a quoted path at the beginning of a
+                    // line is an expression, not a command, and an unquoted one breaks as
+                    // soon as the path contains a space (#23, #58)
+                    response = executeCommand("& \"" + tmpFile.getAbsolutePath() + "\" " + params);
                 } finally {
                     // The session may be broken after a timeout: the flag has to be reset
                     // and the temporary script removed even then

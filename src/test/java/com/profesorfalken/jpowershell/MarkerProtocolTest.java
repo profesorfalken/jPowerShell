@@ -65,7 +65,7 @@ public class MarkerProtocolTest {
                 + "    nada) : ;;\n"
                 + "    lento) echo l1; sleep 0.15; echo l2; sleep 0.15; echo l3 ;;\n"
                 // executeScript appends the parameters, so the line may end with a space
-                + "    *ps1*) echo 'hola desde script'; exit 0 ;;\n"
+                + "    '& \"'*ps1*) echo 'hola desde script'; exit 0 ;;\n"
                 + "    *) echo \"OUT[$line]\" ;;\n"
                 + "  esac\n"
                 + "done\n";
@@ -223,6 +223,34 @@ public class MarkerProtocolTest {
             }
         } finally {
             Assert.assertTrue("Cannot delete the script", script.delete());
+        }
+    }
+
+    /**
+     * The temporary script is written wherever java.io.tmpdir or tempFolder says, which on
+     * Windows is usually C:\Users\<name>\AppData\Local\Temp. A space in that path used
+     * to break the invocation (#23, #58).
+     */
+    @Test
+    public void testScriptPathWithSpaces() throws IOException {
+        File directory = Files.createTempDirectory("jpws space").toFile();
+        File script = new File(directory, "mi script.ps1");
+        try {
+            Files.write(script.toPath(), "Write-Output 'irrelevant'\n".getBytes(StandardCharsets.UTF_8));
+
+            Map<String, String> config = new HashMap<>();
+            config.put("maxWait", "5000");
+            config.put("tempFolder", directory.getAbsolutePath());
+
+            try (PowerShell powerShell = PowerShell.openSession(shell.getAbsolutePath()).configuration(config)) {
+                PowerShellResponse response = powerShell.executeScript(script.getAbsolutePath());
+
+                Assert.assertFalse("Should not time out", response.isTimeout());
+                Assert.assertEquals("hola desde script", response.getCommandOutput());
+            }
+        } finally {
+            Assert.assertTrue("Cannot delete the script", script.delete());
+            Assert.assertTrue("Cannot delete the directory", directory.delete());
         }
     }
 }
