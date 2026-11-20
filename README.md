@@ -102,6 +102,21 @@ The variables that can be configured in jPowerShell are:
 *tempFolder*: if you set this variable jPowerShell will use this folder in order to store temporary the scripts to execute.
 By default the environment variable _java.io.tmpdir_ will be used.
 
+## Timeouts
+
+When a command does not finish within `maxWait`, the response comes back with `isTimeout()` set
+and **the session is closed**: the console is left with output that would otherwise be read by the
+next command. Any later call on that session throws `IllegalStateException`, so open a new one to
+continue.
+
+```java
+    PowerShellResponse response = powerShell.executeCommand("Start-Sleep -Seconds 60");
+    if (response.isTimeout()) {
+        // The session cannot be reused
+        powerShell = PowerShell.openSession();
+    }
+```
+
 ## Advanced usage
 
 ### Setting the PowerShell executable path
